@@ -5,12 +5,5 @@ services:
     plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python3 server_multiuser.py"
-    envVars:
-      - key: DATA_DIR
-        value: /data
     healthCheckPath: /api/health
     autoDeploy: true
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
