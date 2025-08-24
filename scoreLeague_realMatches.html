@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Real Match Data v2.0</title>
+    
+    <!-- Cache busting meta tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .coins {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .matches-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .loading-matches {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .api-error-notice {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .retry-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .league-section {
+            margin-bottom: 3rem;
+        }
+
+        .league-title {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #27ae60;
+        }
+
+        .match-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .match-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .teams-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .team-logo {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .vs-divider {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 0 1rem;
+        }
+
+        .match-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .market-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .market-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+        }
+
+        .market-odds {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .odds-button {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border: 2px solid #27ae60;
+            color: #27ae60;
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .odds-button:hover {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .odds-button.selected {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .teams-display {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .vs-divider {
+                margin: 0;
+            }
+            
+            .market-odds {
+                flex-direction: column;
+            }
+            
+            .odds-button {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            ⚽ ScoreLeague
+        </div>
+        <div class="user-info">
+            <div class="coins" id="coin-display">💰 1000 coins</div>
+            <button class="refresh-btn" onclick="showProfile()">👤 Profile</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('matches')">⚽ Matches</button>
+            <button class="nav-tab" onclick="showTab('betslip')">🎯 Bet Slip</button>
+            <button class="nav-tab" onclick="showTab('mybets')">📋 My Bets</button>
+            <button class="nav-tab" onclick="showTab('social')">🏆 Social</button>
+        </nav>
+
+        <!-- MATCHES TAB -->
+        <div id="matches-tab" class="tab-content active">
+            <div class="matches-header">
+                <h2 id="matches-title">⚽ Loading Real Matches...</h2>
+                <button id="refresh-matches" class="refresh-btn" onclick="loadRealMatches()" style="display: none;">🔄 Refresh</button>
+            </div>
+            <div id="matches-container">
+                <div class="loading-matches">
+                    <p>📡 Fetching live match data from 2. Bundesliga and other leagues...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BET SLIP TAB -->
+        <div id="betslip-tab" class="tab-content">
+            <h2>🎯 Your Bet Slip</h2>
+            <div id="bet-slip-content">
+                <p>No bets selected yet. Click on odds to add bets!</p>
+            </div>
+        </div>
+
+        <!-- MY BETS TAB -->
+        <div id="mybets-tab" class="tab-content">
+            <h2>📋 My Bets</h2>
+            <div id="my-bets-content">
+                <p>No bets placed yet.</p>
+            </div>
+        </div>
+
+        <!-- SOCIAL TAB -->
+        <div id="social-tab" class="tab-content">
+            <h2>🏆 Social & Rankings</h2>
+            <p>Social features coming soon...</p>
+        </div>
+    </div>
+
+    <!-- Include Odds API Service -->
+    <script src="odds-api-service.js?v=2"></script>
+    
+    <script>
+        // Global variables
+        let betSlip = [];
+        let coins = 1000;
+        let realMatches = [];
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        // Load real matches from API
+        async function loadRealMatches() {
+            console.log('🔄 Loading real match data from API...');
+            
+            // Update UI to show loading state
+            document.getElementById('matches-title').textContent = '⚽ Loading Real Matches...';
+            document.getElementById('matches-container').innerHTML = '<div class="loading-matches"><p>📡 Fetching live match data from 2. Bundesliga and other leagues...</p></div>';
+            
+            try {
+                // Use the Odds API service to get real matches
+                if (typeof window.oddsAPIService !== 'undefined') {
+                    console.log('📡 Odds API service found, fetching matches...');
+                    const matches = await window.oddsAPIService.getMultipleLeagues();
+                    
+                    if (matches && matches.length > 0) {
+                        realMatches = matches;
+                        renderRealMatches(matches);
+                        console.log(`✅ Loaded ${matches.length} real matches successfully!`);
+                    } else {
+                        console.log('⚠️ No matches found, falling back to demo data');
+                        renderFallbackMatches();
+                    }
+                } else {
+                    console.error('❌ Odds API service not available');
+                    renderFallbackMatches();
+                }
+            } catch (error) {
+                console.error('❌ Error loading real matches:', error);
+                renderFallbackMatches();
+            }
+        }
+
+        // Render real matches from API
+        function renderRealMatches(matches) {
+            const container = document.getElementById('matches-container');
+            const title = document.getElementById('matches-title');
+            const refreshBtn = document.getElementById('refresh-matches');
+            
+            // Update title and show refresh button
+            title.textContent = `⚽ Live Matches (${matches.length} available)`;
+            refreshBtn.style.display = 'inline-block';
+            
+            // Group matches by league
+            const matchesByLeague = {};
+            matches.forEach(match => {
+                if (!matchesByLeague[match.league]) {
+                    matchesByLeague[match.league] = [];
+                }
+                matchesByLeague[match.league].push(match);
+            });
+            
+            let html = '';
+            
+            // Render each league section
+            Object.keys(matchesByLeague).forEach(league => {
+                const leagueMatches = matchesByLeague[league];
+                html += `<div class="league-section">`;
+                html += `<h3 class="league-title">🏆 ${league} (${leagueMatches.length} matches)</h3>`;
+                
+                leagueMatches.forEach(match => {
+                    html += renderMatchCard(match);
+                });
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Render individual match card
+        function renderMatchCard(match) {
+            const statusIcon = match.status === 'live' ? '🔴' : (match.status === 'upcoming' ? '⏰' : '✅');
+            const statusText = match.status === 'live' ? 'LIVE' : (match.status === 'upcoming' ? `${match.date} ${match.time}` : 'Finished');
+            
+            return `
+                <div class="match-card real-match" data-match-id="${match.id}">
+                    <div class="match-header">
+                        <div class="teams-display">
+                            <div class="team">
+                                <span class="team-logo">⚽</span>
+                                <span class="team-name">${match.homeTeam}</span>
+                            </div>
+                            <div class="vs-divider">VS</div>
+                            <div class="team">
+                                <span class="team-logo">⚽</span>
+                                <span class="team-name">${match.awayTeam}</span>
+                            </div>
+                        </div>
+                        <div class="match-info">
+                            <span class="match-time">${statusIcon} ${statusText}</span>
+                            <span class="match-league">🏆 ${match.league}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="market-section">
+                        <div class="market-title">Match Result (1X2)</div>
+                        <div class="market-odds">
+                            <button class="odds-button" onclick="toggleBet('${match.id}-1', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} Win', ${match.markets.match_result.home}, this)">1 (${match.markets.match_result.home})</button>
+                            <button class="odds-button" onclick="toggleBet('${match.id}-x', '${match.homeTeam} vs ${match.awayTeam}', 'Draw', ${match.markets.match_result.draw}, this)">X (${match.markets.match_result.draw})</button>
+                            <button class="odds-button" onclick="toggleBet('${match.id}-2', '${match.homeTeam} vs ${match.awayTeam}', '${match.awayTeam} Win', ${match.markets.match_result.away}, this)">2 (${match.markets.match_result.away})</button>
+                        </div>
+                    </div>
+                    
+                    <div class="market-section">
+                        <div class="market-title">Total Goals</div>
+                        <div class="market-odds">
+                            <button class="odds-button" onclick="toggleBet('${match.id}-over', '${match.homeTeam} vs ${match.awayTeam}', 'Over 2.5 Goals', ${match.markets.total_goals.over}, this)">Over 2.5 (${match.markets.total_goals.over})</button>
+                            <button class="odds-button" onclick="toggleBet('${match.id}-under', '${match.homeTeam} vs ${match.awayTeam}', 'Under 2.5 Goals', ${match.markets.total_goals.under}, this)">Under 2.5 (${match.markets.total_goals.under})</button>
+                        </div>
+                    </div>
+                    
+                    <div class="market-section">
+                        <div class="market-title">Both Teams to Score</div>
+                        <div class="market-odds">
+                            <button class="odds-button" onclick="toggleBet('${match.id}-btts-yes', '${match.homeTeam} vs ${match.awayTeam}', 'Both Teams Score - Yes', ${match.markets.both_teams_score.yes}, this)">Yes (${match.markets.both_teams_score.yes})</button>
+                            <button class="odds-button" onclick="toggleBet('${match.id}-btts-no', '${match.homeTeam} vs ${match.awayTeam}', 'Both Teams Score - No', ${match.markets.both_teams_score.no}, this)">No (${match.markets.both_teams_score.no})</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fallback to demo matches if API fails
+        function renderFallbackMatches() {
+            const container = document.getElementById('matches-container');
+            const title = document.getElementById('matches-title');
+            
+            title.textContent = '⚽ Demo Matches (API unavailable)';
+            
+            container.innerHTML = `
+                <div class="api-error-notice">
+                    <p>📡 Unable to load live match data. This could be due to:</p>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>API quota exceeded</li>
+                        <li>No matches currently available</li>
+                        <li>Network connectivity issues</li>
+                    </ul>
+                    <button onclick="loadRealMatches()" class="retry-btn">🔄 Try Again</button>
+                </div>
+                
+                <div class="league-section">
+                    <h3 class="league-title">🏆 Demo Matches for Testing</h3>
+                    <div class="match-card">
+                        <div class="match-header">
+                            <div class="teams-display">
+                                <div class="team">
+                                    <span class="team-logo">⚽</span>
+                                    <span class="team-name">FC Schalke 04</span>
+                                </div>
+                                <div class="vs-divider">VS</div>
+                                <div class="team">
+                                    <span class="team-logo">⚽</span>
+                                    <span class="team-name">Hamburger SV</span>
+                                </div>
+                            </div>
+                            <div class="match-info">
+                                <span class="match-time">⏰ Today 15:30</span>
+                                <span class="match-league">🏆 2. Bundesliga</span>
+                            </div>
+                        </div>
+                        
+                        <div class="market-section">
+                            <div class="market-title">Match Result (1X2)</div>
+                            <div class="market-odds">
+                                <button class="odds-button" onclick="toggleBet('demo-1', 'Schalke vs Hamburg', 'Schalke Win', 2.1, this)">1 (2.1)</button>
+                                <button class="odds-button" onclick="toggleBet('demo-x', 'Schalke vs Hamburg', 'Draw', 3.4, this)">X (3.4)</button>
+                                <button class="odds-button" onclick="toggleBet('demo-2', 'Schalke vs Hamburg', 'Hamburg Win', 3.2, this)">2 (3.2)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle bet selection
+        function toggleBet(betId, match, selection, odds, button) {
+            const existingBetIndex = betSlip.findIndex(bet => bet.id === betId);
+            
+            if (existingBetIndex > -1) {
+                // Remove bet
+                betSlip.splice(existingBetIndex, 1);
+                button.classList.remove('selected');
+            } else {
+                // Add bet
+                betSlip.push({
+                    id: betId,
+                    match: match,
+                    selection: selection,
+                    odds: odds
+                });
+                button.classList.add('selected');
+            }
+            
+            updateBetSlip();
+        }
+
+        // Update bet slip display
+        function updateBetSlip() {
+            const betSlipContent = document.getElementById('bet-slip-content');
+            
+            if (betSlip.length === 0) {
+                betSlipContent.innerHTML = '<p>No bets selected yet. Click on odds to add bets!</p>';
+                return;
+            }
+            
+            let totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+            let stake = 10; // Default stake
+            let potentialWin = stake * totalOdds;
+            
+            let html = '<div class="bet-slip-summary">';
+            html += `<h3>🎯 ${betSlip.length} Bet${betSlip.length > 1 ? 's' : ''} Selected</h3>`;
+            
+            betSlip.forEach(bet => {
+                html += `
+                    <div class="bet-item">
+                        <div class="bet-match">${bet.match}</div>
+                        <div class="bet-selection">${bet.selection} @ ${bet.odds}</div>
+                        <button onclick="removeBet('${bet.id}')" class="remove-bet">×</button>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="bet-totals">
+                    <div>Combined Odds: <strong>${totalOdds.toFixed(2)}</strong></div>
+                    <div>Stake: <strong>${stake} coins</strong></div>
+                    <div>Potential Win: <strong>${potentialWin.toFixed(0)} coins</strong></div>
+                </div>
+                <button onclick="placeBet()" class="place-bet-btn">Place Bet</button>
+            `;
+            html += '</div>';
+            
+            betSlipContent.innerHTML = html;
+        }
+
+        // Remove bet from slip
+        function removeBet(betId) {
+            betSlip = betSlip.filter(bet => bet.id !== betId);
+            
+            // Remove visual selection from button
+            const button = document.querySelector(`[onclick*="${betId}"]`);
+            if (button) {
+                button.classList.remove('selected');
+            }
+            
+            updateBetSlip();
+        }
+
+        // Place bet
+        function placeBet() {
+            if (betSlip.length === 0) return;
+            
+            let totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+            let stake = 10;
+            
+            if (coins < stake) {
+                alert('Not enough coins!');
+                return;
+            }
+            
+            // Deduct coins
+            coins -= stake;
+            document.getElementById('coin-display').textContent = `💰 ${coins} coins`;
+            
+            // Save bet (simplified for demo)
+            console.log('Bet placed:', {
+                bets: betSlip,
+                stake: stake,
+                totalOdds: totalOdds,
+                potentialWin: stake * totalOdds
+            });
+            
+            // Clear bet slip
+            betSlip = [];
+            document.querySelectorAll('.odds-button.selected').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            updateBetSlip();
+            
+            alert(`Bet placed successfully! ${stake} coins deducted.`);
+        }
+
+        // Profile placeholder
+        function showProfile() {
+            alert('Profile modal coming soon!');
+        }
+
+        // Auto-load real matches on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 ScoreLeague Real Match Integration v2.0 initialized!');
+            console.log('🏈 Prioritizing 2. Bundesliga and Championship for immediate testing');
+            
+            // Load real matches after a short delay to ensure API service is ready
+            setTimeout(() => {
+                loadRealMatches();
+            }, 1000);
+        });
+
+        console.log('⚽ ScoreLeague Real Match Data v2.0 Ready!');
+    </script>
+</body>
+</html>

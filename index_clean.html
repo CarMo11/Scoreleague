@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Free Sports Betting Platform</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Skill-based sports betting and prediction game with friends">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-center {
+            flex: 2;
+            text-align: center;
+        }
+
+        .header-center h1 {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .header-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        .coins-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .profile-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .profile-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: #ecf0f1;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .nav-tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .nav-tab:hover {
+            background: #34495e;
+            color: white;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        .match-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .match-teams {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .match-time {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .market-section {
+            margin-bottom: 15px;
+        }
+
+        .market-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+
+        .market-odds {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .odds-button {
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            min-width: 80px;
+        }
+
+        .odds-button:hover {
+            background: #d5dbdb;
+            transform: translateY(-1px);
+        }
+
+        .odds-button.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .bet-slip {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .bet-slip h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .bet-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .stake-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .stake-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .quick-stakes {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .quick-stake-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .quick-stake-btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .stake-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .place-bet-btn {
+            width: 100%;
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .place-bet-btn:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+
+        .place-bet-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+        }
+
+        .message.show {
+            transform: translateX(0);
+        }
+
+        .message.success {
+            background: #27ae60;
+        }
+
+        .message.error {
+            background: #e74c3c;
+        }
+
+        /* Hide all tabs except matches by default */
+        .tab-content {
+            display: none;
+        }
+
+        #matches-tab {
+            display: block;
+        }
+
+        /* Profile Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 10px;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-left"></div>
+            <div class="header-center">
+                <h1>⚽ ScoreLeague</h1>
+            </div>
+            <div class="header-right">
+                <div class="coins-display">💰 <span id="coins">1000</span> coins</div>
+                <button class="profile-btn" onclick="showProfile()">👤 Profile</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('matches')">Matches</button>
+            <button class="nav-tab" onclick="showTab('betslip')">Bet Slip (<span id="bet-count">0</span>)</button>
+            <button class="nav-tab" onclick="showTab('mybets')">My Bets</button>
+            <button class="nav-tab" onclick="showTab('rankings')">Rankings</button>
+        </div>
+
+        <!-- MATCHES TAB - VISIBLE BY DEFAULT -->
+        <div id="matches-tab" class="tab-content">
+            <h2>🏈 Premier League Matches</h2>
+            
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="match-teams">Manchester City vs Liverpool</div>
+                    <div class="match-time">15:30 • upcoming</div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Match Result (1X2)</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('mc-liv-1', 'Man City vs Liverpool', 'Man City Win', 2.1, this)">1 (2.1)</button>
+                        <button class="odds-button" onclick="toggleBet('mc-liv-x', 'Man City vs Liverpool', 'Draw', 3.4, this)">X (3.4)</button>
+                        <button class="odds-button" onclick="toggleBet('mc-liv-2', 'Man City vs Liverpool', 'Liverpool Win', 3.2, this)">2 (3.2)</button>
+                    </div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Total Goals</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('mc-liv-over', 'Man City vs Liverpool', 'Over 2.5 Goals', 1.85, this)">Over 2.5 (1.85)</button>
+                        <button class="odds-button" onclick="toggleBet('mc-liv-under', 'Man City vs Liverpool', 'Under 2.5 Goals', 1.95, this)">Under 2.5 (1.95)</button>
+                    </div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Both Teams to Score</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('mc-liv-btts-yes', 'Man City vs Liverpool', 'Both Teams Score - Yes', 1.72, this)">Yes (1.72)</button>
+                        <button class="odds-button" onclick="toggleBet('mc-liv-btts-no', 'Man City vs Liverpool', 'Both Teams Score - No', 2.05, this)">No (2.05)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="match-teams">Arsenal vs Chelsea</div>
+                    <div class="match-time">18:00 • live • 1-0</div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Match Result (1X2)</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('ars-che-1', 'Arsenal vs Chelsea', 'Arsenal Win', 1.95, this)">1 (1.95)</button>
+                        <button class="odds-button" onclick="toggleBet('ars-che-x', 'Arsenal vs Chelsea', 'Draw', 3.6, this)">X (3.6)</button>
+                        <button class="odds-button" onclick="toggleBet('ars-che-2', 'Arsenal vs Chelsea', 'Chelsea Win', 3.8, this)">2 (3.8)</button>
+                    </div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Total Goals</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('ars-che-over', 'Arsenal vs Chelsea', 'Over 2.5 Goals', 1.9, this)">Over 2.5 (1.9)</button>
+                        <button class="odds-button" onclick="toggleBet('ars-che-under', 'Arsenal vs Chelsea', 'Under 2.5 Goals', 1.9, this)">Under 2.5 (1.9)</button>
+                    </div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Both Teams to Score</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('ars-che-btts-yes', 'Arsenal vs Chelsea', 'Both Teams Score - Yes', 1.68, this)">Yes (1.68)</button>
+                        <button class="odds-button" onclick="toggleBet('ars-che-btts-no', 'Arsenal vs Chelsea', 'Both Teams Score - No', 2.15, this)">No (2.15)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BET SLIP TAB -->
+        <div id="betslip-tab" class="tab-content">
+            <h2>🎯 Your Bet Slip</h2>
+            <div id="bet-slip-content">
+                <p>No bets selected yet. Click on odds to add bets!</p>
+            </div>
+        </div>
+
+        <!-- MY BETS TAB -->
+        <div id="mybets-tab" class="tab-content">
+            <h2>📋 My Bets</h2>
+            <div id="my-bets-content">
+                <p>No bets placed yet.</p>
+            </div>
+        </div>
+
+        <!-- RANKINGS TAB -->
+        <div id="rankings-tab" class="tab-content">
+            <h2>🏆 Leaderboard</h2>
+            <div id="rankings-content">
+                <div class="stat-item">
+                    <span><strong>1. ProBetter</strong></span>
+                    <span>2,450 coins</span>
+                </div>
+                <div class="stat-item">
+                    <span><strong>2. LuckyPunter</strong></span>
+                    <span>1,890 coins</span>
+                </div>
+                <div class="stat-item">
+                    <span><strong>3. You</strong></span>
+                    <span><span id="coins-ranking">1000</span> coins</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeProfile()">&times;</span>
+            <h2>👤 Your Profile</h2>
+            <div class="stat-item">
+                <span>Total Coins:</span>
+                <span id="profile-coins">1000</span>
+            </div>
+            <div class="stat-item">
+                <span>Bets Placed:</span>
+                <span id="profile-bets">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Win Rate:</span>
+                <span id="profile-winrate">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message container -->
+    <div id="message" class="message"></div>
+
+    <script>
+        let betSlip = [];
+        let coins = 1000;
+        let currentStake = 0;
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Update content if needed
+            if (tabName === 'mybets') {
+                updateMyBets();
+            }
+        }
+
+        function toggleBet(betId, match, selection, odds, button) {
+            const existingBetIndex = betSlip.findIndex(bet => bet.id === betId);
+            
+            if (existingBetIndex > -1) {
+                // Remove bet
+                betSlip.splice(existingBetIndex, 1);
+                button.classList.remove('selected');
+            } else {
+                // Add bet
+                betSlip.push({
+                    id: betId,
+                    match: match,
+                    selection: selection,
+                    odds: odds
+                });
+                button.classList.add('selected');
+            }
+            
+            updateBetSlip();
+        }
+
+        function updateBetSlip() {
+            const betSlipContent = document.getElementById('bet-slip-content');
+            const betCount = document.getElementById('bet-count');
+            
+            betCount.textContent = betSlip.length;
+            
+            if (betSlip.length === 0) {
+                betSlipContent.innerHTML = '<p>No bets selected yet. Click on odds to add bets!</p>';
+                return;
+            }
+            
+            let totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+            let potentialWin = currentStake * totalOdds;
+            
+            let html = '<div class="bet-slip">';
+            html += '<h3>Selected Bets</h3>';
+            
+            betSlip.forEach(bet => {
+                html += `
+                    <div class="bet-item">
+                        <div><strong>${bet.match}</strong></div>
+                        <div>${bet.selection} @ ${bet.odds}</div>
+                        <button onclick="removeBet('${bet.id}')" style="float: right; background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;">Remove</button>
+                    </div>
+                `;
+            });
+            
+            html += '<div class="stake-section">';
+            html += `<div class="stake-display">Current Stake: ${currentStake} coins</div>`;
+            html += '<div class="quick-stakes">';
+            html += '<button class="quick-stake-btn" onclick="addStake(5)">+5</button>';
+            html += '<button class="quick-stake-btn" onclick="addStake(10)">+10</button>';
+            html += '<button class="quick-stake-btn" onclick="addStake(25)">+25</button>';
+            html += '<button class="quick-stake-btn" onclick="addStake(50)">+50</button>';
+            html += '</div>';
+            html += `<input type="number" class="stake-input" placeholder="Enter stake" value="${currentStake}" onchange="setStake(this.value)">`;
+            html += `<div style="margin: 10px 0;"><strong>Combined Odds: ${totalOdds.toFixed(2)}</strong></div>`;
+            html += `<div style="margin: 10px 0;"><strong>Potential Win: ${potentialWin.toFixed(0)} coins</strong></div>`;
+            html += '<button class="place-bet-btn" onclick="placeBets()">Place Bet</button>';
+            html += '</div></div>';
+            
+            betSlipContent.innerHTML = html;
+        }
+
+        function addStake(amount) {
+            currentStake += amount;
+            updateBetSlip();
+        }
+
+        function setStake(value) {
+            currentStake = parseInt(value) || 0;
+            updateBetSlip();
+        }
+
+        function removeBet(betId) {
+            const betIndex = betSlip.findIndex(bet => bet.id === betId);
+            if (betIndex > -1) {
+                betSlip.splice(betIndex, 1);
+                // Remove selected class from button
+                const button = document.querySelector(`[onclick*="${betId}"]`);
+                if (button) button.classList.remove('selected');
+                updateBetSlip();
+            }
+        }
+
+        function placeBets() {
+            if (betSlip.length === 0) {
+                showMessage('Please select at least one bet!', 'error');
+                return;
+            }
+            
+            if (currentStake <= 0) {
+                showMessage('Please enter a stake amount!', 'error');
+                return;
+            }
+            
+            if (currentStake > coins) {
+                showMessage('Not enough coins!', 'error');
+                return;
+            }
+            
+            // Deduct coins
+            coins -= currentStake;
+            document.getElementById('coins').textContent = coins;
+            document.getElementById('coins-ranking').textContent = coins;
+            document.getElementById('profile-coins').textContent = coins;
+            
+            // Save bet to localStorage
+            const placedBets = JSON.parse(localStorage.getItem('placedBets') || '[]');
+            const newBet = {
+                id: Date.now(),
+                bets: [...betSlip],
+                stake: currentStake,
+                totalOdds: betSlip.reduce((acc, bet) => acc * bet.odds, 1),
+                potentialWin: currentStake * betSlip.reduce((acc, bet) => acc * bet.odds, 1),
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            };
+            placedBets.push(newBet);
+            localStorage.setItem('placedBets', JSON.stringify(placedBets));
+            
+            // Clear bet slip
+            betSlip = [];
+            currentStake = 0;
+            document.querySelectorAll('.odds-button.selected').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            updateBetSlip();
+            showMessage('Bet placed successfully!', 'success');
+        }
+
+        function updateMyBets() {
+            const myBetsContent = document.getElementById('my-bets-content');
+            const placedBets = JSON.parse(localStorage.getItem('placedBets') || '[]');
+            
+            if (placedBets.length === 0) {
+                myBetsContent.innerHTML = '<p>No bets placed yet.</p>';
+                return;
+            }
+            
+            let html = '';
+            placedBets.forEach(bet => {
+                html += `
+                    <div class="bet-item" style="margin-bottom: 15px;">
+                        <div><strong>Bet #${bet.id}</strong> - ${bet.date}</div>
+                        <div>Stake: ${bet.stake} coins | Odds: ${bet.totalOdds.toFixed(2)} | Potential: ${bet.potentialWin.toFixed(0)} coins</div>
+                        <div>Status: <strong>${bet.status}</strong></div>
+                        <div style="margin-top: 5px;">
+                            ${bet.bets.map(b => `${b.match}: ${b.selection} @ ${b.odds}`).join('<br>')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            myBetsContent.innerHTML = html;
+        }
+
+        function showProfile() {
+            document.getElementById('profileModal').style.display = 'block';
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type} show`;
+            
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('ScoreLeague Clean Version Initialized!');
+            updateBetSlip();
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('profileModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

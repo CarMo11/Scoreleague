@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Green Theme Fixed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+        
+        /* GREEN HEADER */
+        header {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+            color: white !important;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(39, 174, 96, 0.3);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-left h1 { font-size: 1.8rem; font-weight: 700; }
+        .header-right { display: flex; flex-direction: column; gap: 5px; }
+        
+        #profile-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .coins {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* GREEN NAVIGATION */
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 30px; }
+        
+        .nav-tab {
+            flex: 1;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+            border: 2px solid #dee2e6 !important;
+            border-radius: 12px !important;
+            padding: 15px 10px !important;
+            text-align: center;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            color: #2c3e50 !important;
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+            color: white !important;
+            border-color: #229954 !important;
+        }
+        
+        .tab-content { background: white; border-radius: 12px; padding: 25px; display: none; }
+        .tab-content.active { display: block; }
+        
+        /* GREEN ODDS BUTTONS */
+        .odds-button {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+            border: 2px solid #e9ecef !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            font-weight: 600 !important;
+            color: #2c3e50 !important;
+            cursor: pointer !important;
+            margin: 4px !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .odds-button:hover {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%) !important;
+            border-color: #27ae60 !important;
+        }
+        
+        .odds-button.selected {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+            color: white !important;
+            border-color: #229954 !important;
+        }
+        
+        .market-odds { display: flex !important; gap: 8px !important; flex-wrap: wrap !important; }
+        .match-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .match-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .match-teams { font-size: 18px; font-weight: 700; }
+        .market-title { font-weight: 600; margin: 15px 0 10px 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <span>🏆</span>
+                <div>
+                    <h1>ScoreLeague</h1>
+                    <p>Free Sports Betting Platform</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="profile-btn">👤</button>
+                <div class="coins">💰 <span id="coins">1000</span></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('matches')">MATCHES</button>
+            <button class="nav-tab" onclick="showTab('betslip')">BET SLIP</button>
+            <button class="nav-tab" onclick="showTab('mybets')">MY BETS</button>
+            <button class="nav-tab" onclick="showTab('rankings')">RANKINGS</button>
+        </div>
+
+        <div id="matches-tab" class="tab-content active">
+            <div id="matches-content"></div>
+        </div>
+
+        <div id="betslip-tab" class="tab-content">
+            <p>Bet slip content here</p>
+        </div>
+
+        <div id="mybets-tab" class="tab-content">
+            <p>My bets content here</p>
+        </div>
+
+        <div id="rankings-tab" class="tab-content">
+            <p>Rankings content here</p>
+        </div>
+    </div>
+
+    <script>
+        // Render matches immediately
+        function renderMatches() {
+            const content = document.getElementById('matches-content');
+            content.innerHTML = `
+                <h2>⚽ Premier League Matches</h2>
+                <div class="match-card">
+                    <div class="match-header">
+                        <div class="match-teams">Manchester City vs Liverpool</div>
+                        <div>15:30 • upcoming</div>
+                    </div>
+                    <div class="market-title">Match Result (1X2)</div>
+                    <div class="market-odds">
+                        <button class="odds-button">1 (2.1)</button>
+                        <button class="odds-button">X (3.4)</button>
+                        <button class="odds-button">2 (3.2)</button>
+                    </div>
+                    <div class="market-title">Double Chance</div>
+                    <div class="market-odds">
+                        <button class="odds-button">1X (1.25)</button>
+                        <button class="odds-button">12 (1.18)</button>
+                        <button class="odds-button">X2 (1.65)</button>
+                    </div>
+                    <div class="market-title">Total Goals</div>
+                    <div class="market-odds">
+                        <button class="odds-button">OVER 2.5 (1.85)</button>
+                        <button class="odds-button">UNDER 2.5 (1.95)</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize immediately
+        document.addEventListener('DOMContentLoaded', renderMatches);
+        renderMatches(); // Also call directly for immediate render
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Exclude local tunnel binaries and archives from Netlify upload
+cloudflared
+cloudflared*
+ngrok
+ngrok*
+*.tgz
+*.zip
+*.tar
+*.tar.gz
+.ngrok/
+.ngrok2/

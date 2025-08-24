@@ -1,0 +1,342 @@
+/* Mobile-First Horizontal Betting Layout - Bet365 Inspired */
+
+/* Compact Match Card - Mobile First */
+.match-card.enhanced {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.match-card.enhanced:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Horizontal Match Layout */
+.match-card.enhanced .match-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: 60px;
+}
+
+.match-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.match-time {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    min-width: 35px;
+    text-align: center;
+}
+
+.team-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.team-icon {
+    width: 20px;
+    height: 20px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.match-teams {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.3;
+    min-width: 0;
+}
+
+.match-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #666;
+}
+
+/* Horizontal Betting Markets */
+.betting-markets {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    background: #e5e5e5;
+}
+
+/* Horizontal Market Layout - Bet365 Inspired */
+.market-section {
+    background: white;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 50px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.market-section:last-child {
+    border-bottom: none;
+}
+
+.market-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    min-width: 100px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.market-odds {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    align-items: center;
+    max-width: 200px;
+}
+
+/* Compact Betting Buttons - Higher specificity to override old styles */
+.match-card.enhanced .market-odds {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* Override odds button layout to be horizontal (label + value side-by-side) */
+.match-card.enhanced .market-odds .odds-button {
+    flex-direction: row;
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    color: #333;
+    min-width: 60px;
+    height: 38px;
+    padding: 8px 12px;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+}
+
+.match-card.enhanced .market-odds .odds-button:hover {
+    background: #f0f8ff;
+    border-color: #007bff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15);
+}
+
+.match-card.enhanced .market-odds .odds-button.selected {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+}
+
+.odds-label {
+    font-size: 9px;
+    font-weight: 600;
+    opacity: 0.8;
+    line-height: 1;
+}
+
+.odds-value {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    margin-top: 1px;
+}
+
+/* Market-specific colors */
+.match-card.enhanced .market-section:nth-child(1) .odds-button:hover {
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+.match-card.enhanced .market-section:nth-child(2) .odds-button:hover {
+    background: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+.match-card.enhanced .market-section:nth-child(3) .odds-button:hover {
+    background: #e2e3f1;
+    border-color: #6f42c1;
+}
+
+/* League Headers - Compact */
+.league-header {
+    background: #007bff;
+    color: white;
+    padding: 8px 12px;
+    margin: 16px 0 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.league-header h3 {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+/* Tablet Optimization */
+@media (min-width: 768px) {
+    .match-card.enhanced {
+        margin-bottom: 12px;
+    }
+    
+    .match-header {
+        padding: 16px;
+        min-height: 70px;
+    }
+    
+    .match-info {
+        gap: 16px;
+    }
+    
+    .match-teams {
+        font-size: 15px;
+    }
+    
+    .market-section {
+        padding: 10px 16px;
+        min-height: 48px;
+    }
+    
+    .market-title {
+        font-size: 13px;
+        min-width: 100px;
+    }
+    
+    .market-odds .odds-button {
+        min-width: 55px;
+        height: 36px;
+        padding: 8px 10px;
+    }
+    
+    .odds-value {
+        font-size: 13px;
+    }
+}
+
+/* Desktop Optimization */
+@media (min-width: 1024px) {
+    .betting-markets {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    
+    .market-section {
+        flex-direction: column;
+        text-align: center;
+        padding: 12px;
+        gap: 8px;
+    }
+    
+    .market-title {
+        min-width: auto;
+        margin-bottom: 4px;
+    }
+    
+    .market-odds {
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .market-odds .odds-button {
+        min-width: 60px;
+        height: 40px;
+    }
+}
+
+/* Loading States */
+.odds-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Success Indicator */
+.odds-button.selected::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    font-size: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .match-card.enhanced {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .match-header {
+        background: #1a202c;
+        border-color: #4a5568;
+    }
+    
+    .match-teams {
+        color: #e2e8f0;
+    }
+    
+    .market-section {
+        background: #2d3748;
+    }
+    
+    .market-title {
+        color: #a0aec0;
+    }
+    
+    .odds-button {
+        background: #4a5568;
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .odds-button:hover {
+        background: #718096;
+    }
+}

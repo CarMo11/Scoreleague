@@ -1,0 +1,49 @@
+{
+  "name": "ScoreLeague - Sports Betting",
+  "short_name": "ScoreLeague",
+  "description": "Skill-based sports betting and prediction game with friends",
+  "start_url": "./multiuser_client.html",
+  "display": "standalone",
+  "background_color": "#2c3e50",
+  "theme_color": "#3498db",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["sports", "games", "social"],
+  "icons": [
+    {
+      "src": "icons/icon-72x72.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Place Bet",
+      "short_name": "Bet",
+      "description": "Quick access to place bets",
+      "url": "/multiuser_client.html#matches",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "My Bets",
+      "short_name": "Bets",
+      "description": "View your betting history",
+      "url": "/multiuser_client.html#mybets",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
+}

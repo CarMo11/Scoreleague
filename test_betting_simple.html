@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Betting Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .match-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .match-teams {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .odds-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .odds-button {
+            background: white;
+            border: 2px solid #007bff;
+            color: #007bff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            min-width: 70px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .odds-button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .odds-button.selected {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        
+        .bet-slip {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .bet-slip h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .bet-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .empty-slip {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .test-controls {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 ScoreLeague Betting Test</h1>
+        
+        <div class="test-controls">
+            <h4>🔧 Diagnostic Controls</h4>
+            <button class="test-button" onclick="runDiagnostics()">Run Diagnostics</button>
+            <button class="test-button" onclick="clearBetSlip()">Clear Bet Slip</button>
+            <button class="test-button" onclick="testAllButtons()">Test All Buttons</button>
+        </div>
+        
+        <div id="diagnostics-results">
+            <!-- Diagnostic results will appear here -->
+        </div>
+        
+        <div class="match-card">
+            <div class="match-header">
+                <div class="match-teams">Manchester City vs Liverpool</div>
+                <div>15:30 - Premier League</div>
+            </div>
+            <div class="odds-container">
+                <button class="odds-button" 
+                        data-match-id="1" 
+                        data-market="match_result" 
+                        data-selection="home"
+                        data-odds="2.1"
+                        data-team-name="Manchester City">
+                    1: 2.1
+                </button>
+                <button class="odds-button" 
+                        data-match-id="1" 
+                        data-market="match_result" 
+                        data-selection="draw"
+                        data-odds="3.4">
+                    X: 3.4
+                </button>
+                <button class="odds-button" 
+                        data-match-id="1" 
+                        data-market="match_result" 
+                        data-selection="away"
+                        data-odds="3.2"
+                        data-team-name="Liverpool">
+                    2: 3.2
+                </button>
+            </div>
+        </div>
+        
+        <div class="match-card">
+            <div class="match-header">
+                <div class="match-teams">Arsenal vs Chelsea</div>
+                <div>18:00 - Premier League</div>
+            </div>
+            <div class="odds-container">
+                <button class="odds-button" 
+                        data-match-id="2" 
+                        data-market="match_result" 
+                        data-selection="home"
+                        data-odds="1.95"
+                        data-team-name="Arsenal">
+                    1: 1.95
+                </button>
+                <button class="odds-button" 
+                        data-match-id="2" 
+                        data-market="match_result" 
+                        data-selection="draw"
+                        data-odds="3.6">
+                    X: 3.6
+                </button>
+                <button class="odds-button" 
+                        data-match-id="2" 
+                        data-market="match_result" 
+                        data-selection="away"
+                        data-odds="3.8"
+                        data-team-name="Chelsea">
+                    2: 3.8
+                </button>
+            </div>
+        </div>
+        
+        <div class="bet-slip">
+            <h3>🎫 Bet Slip (<span id="bet-count">0</span>)</h3>
+            <div id="bet-slip-content">
+                <div class="empty-slip">Click on odds to add bets here</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple betting system for testing
+        class SimpleBettingTest {
+            constructor() {
+                this.betSlip = [];
+                this.init();
+            }
+            
+            init() {
+                console.log('🎯 Simple Betting Test Initialized');
+                this.setupEventListeners();
+                this.runInitialDiagnostics();
+            }
+            
+            setupEventListeners() {
+                // Event delegation for odds buttons
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('odds-button')) {
+                        this.handleOddsClick(e.target);
+                    }
+                });
+                
+                console.log('✅ Event listeners setup');
+            }
+            
+            handleOddsClick(button) {
+                console.log('🎯 Odds button clicked:', button.dataset);
+                
+                const matchId = parseInt(button.dataset.matchId);
+                const market = button.dataset.market;
+                const selection = button.dataset.selection;
+                const odds = parseFloat(button.dataset.odds);
+                const teamName = button.dataset.teamName || `${market}-${selection}`;
+                
+                // Check if bet already exists (toggle)
+                const existingIndex = this.betSlip.findIndex(bet => 
+                    bet.matchId === matchId && bet.market === market && bet.selection === selection
+                );
+                
+                if (existingIndex !== -1) {
+                    // Remove bet
+                    this.betSlip.splice(existingIndex, 1);
+                    button.classList.remove('selected');
+                    console.log('Bet removed');
+                } else {
+                    // Remove any existing bet for this match (one per match)
+                    const existingMatchBet = this.betSlip.findIndex(bet => bet.matchId === matchId);
+                    if (existingMatchBet !== -1) {
+                        const oldBet = this.betSlip[existingMatchBet];
+                        const oldButton = document.querySelector(
+                            `[data-match-id="${matchId}"][data-market="${oldBet.market}"][data-selection="${oldBet.selection}"]`
+                        );
+                        if (oldButton) oldButton.classList.remove('selected');
+                        this.betSlip.splice(existingMatchBet, 1);
+                    }
+                    
+                    // Add new bet
+                    const bet = {
+                        id: Date.now(),
+                        matchId,
+                        market,
+                        selection,
+                        odds,
+                        teamName,
+                        description: this.getDescription(selection, teamName)
+                    };
+                    
+                    this.betSlip.push(bet);
+                    button.classList.add('selected');
+                    console.log('Bet added:', bet);
+                }
+                
+                this.updateBetSlipDisplay();
+                this.showFeedback(button);
+            }
+            
+            getDescription(selection, teamName) {
+                if (selection === 'home') return `${teamName} Win`;
+                if (selection === 'away') return `${teamName} Win`;
+                if (selection === 'draw') return 'Draw';
+                return `${selection}`;
+            }
+            
+            updateBetSlipDisplay() {
+                const countElement = document.getElementById('bet-count');
+                const contentElement = document.getElementById('bet-slip-content');
+                
+                countElement.textContent = this.betSlip.length;
+                
+                if (this.betSlip.length === 0) {
+                    contentElement.innerHTML = '<div class="empty-slip">Click on odds to add bets here</div>';
+                } else {
+                    let html = '';
+                    let totalOdds = 1;
+                    
+                    this.betSlip.forEach(bet => {
+                        totalOdds *= bet.odds;
+                        html += `
+                            <div class="bet-item">
+                                <strong>${bet.description}</strong> - ${bet.odds}
+                                <button onclick="bettingTest.removeBet(${bet.id})" style="float: right; background: #dc3545; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer;">×</button>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #28a745;">
+                            <strong>Combined Odds: ${totalOdds.toFixed(2)}</strong><br>
+                            <small>Potential Win (10 coins): ${(10 * totalOdds).toFixed(0)} coins</small>
+                        </div>
+                    `;
+                    
+                    contentElement.innerHTML = html;
+                }
+                
+                console.log('✅ Bet slip updated, current bets:', this.betSlip);
+            }
+            
+            removeBet(betId) {
+                const index = this.betSlip.findIndex(bet => bet.id === betId);
+                if (index !== -1) {
+                    const bet = this.betSlip[index];
+                    this.betSlip.splice(index, 1);
+                    
+                    // Remove visual selection
+                    const button = document.querySelector(
+                        `[data-match-id="${bet.matchId}"][data-market="${bet.market}"][data-selection="${bet.selection}"]`
+                    );
+                    if (button) button.classList.remove('selected');
+                    
+                    this.updateBetSlipDisplay();
+                    console.log('Bet removed:', bet);
+                }
+            }
+            
+            showFeedback(button) {
+                // Visual feedback
+                button.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 200);
+            }
+            
+            runInitialDiagnostics() {
+                const results = document.getElementById('diagnostics-results');
+                let html = '<div class="status success">✅ Page loaded successfully</div>';
+                html += '<div class="status success">✅ JavaScript is working</div>';
+                html += '<div class="status success">✅ Event listeners are active</div>';
+                
+                const buttons = document.querySelectorAll('.odds-button');
+                html += `<div class="status success">✅ Found ${buttons.length} odds buttons</div>`;
+                
+                results.innerHTML = html;
+                console.log('✅ Initial diagnostics complete');
+            }
+        }
+        
+        // Global functions for testing
+        function runDiagnostics() {
+            console.log('🔧 Running comprehensive diagnostics...');
+            
+            const results = document.getElementById('diagnostics-results');
+            let html = '';
+            
+            // Test basic functionality
+            html += '<div class="status success">✅ runDiagnostics() function called</div>';
+            
+            // Test button detection
+            const buttons = document.querySelectorAll('.odds-button');
+            html += `<div class="status success">✅ Found ${buttons.length} odds buttons</div>`;
+            
+            // Test data attributes
+            let validButtons = 0;
+            buttons.forEach(button => {
+                if (button.dataset.matchId && button.dataset.odds) {
+                    validButtons++;
+                }
+            });
+            html += `<div class="status success">✅ ${validButtons} buttons have valid data</div>`;
+            
+            // Test bet slip
+            html += `<div class="status success">✅ Current bets in slip: ${bettingTest.betSlip.length}</div>`;
+            
+            // Test console logging
+            console.log('Diagnostic test - this should appear in browser console');
+            html += '<div class="status success">✅ Check browser console for detailed logs</div>';
+            
+            results.innerHTML = html;
+        }
+        
+        function clearBetSlip() {
+            bettingTest.betSlip = [];
+            document.querySelectorAll('.odds-button.selected').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            bettingTest.updateBetSlipDisplay();
+            console.log('🧹 Bet slip cleared');
+        }
+        
+        function testAllButtons() {
+            console.log('🧪 Testing all buttons...');
+            const buttons = document.querySelectorAll('.odds-button');
+            
+            buttons.forEach((button, index) => {
+                setTimeout(() => {
+                    console.log(`Testing button ${index + 1}:`, button.dataset);
+                    button.click();
+                }, index * 500);
+            });
+        }
+        
+        // Initialize the betting test
+        const bettingTest = new SimpleBettingTest();
+        
+        // Make it globally accessible
+        window.bettingTest = bettingTest;
+        
+        console.log('🎯 Test page fully loaded and ready!');
+    </script>
+</body>
+</html>

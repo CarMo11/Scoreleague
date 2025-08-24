@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Free Sports Betting (FIXED)</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>ScoreLeague</h1>
+            <div class="header-info">
+                <div class="coin-counter"><span id="coin-amount">1000</span></div>
+                <button id="profile-btn" class="profile-btn">👤</button>
+                <div class="user-info">
+                    <span id="username">Anonymous</span>
+                    <button id="change-name-btn">⚙️</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="matches">Matches</button>
+            <button class="nav-tab" data-tab="betslip">Bet Slip <span id="betslip-count">0</span></button>
+            <button class="nav-tab" data-tab="mybets" onclick="console.log('🎯 MY BETS CLICKED DIRECTLY!'); alert('My Bets clicked!'); if(window.scoreLeague) { console.log('Calling switchTab...'); window.scoreLeague.switchTab('mybets'); } else { console.error('ScoreLeague instance not found'); alert('ScoreLeague not found'); }">My Bets</button>
+            <button class="nav-tab" data-tab="rankings">Rankings</button>
+        </nav>
+
+        <!-- Achievement Notification -->
+        <div id="achievement-notification" class="achievement-notification">
+            <div class="achievement-content">
+                <div class="achievement-icon">🏆</div>
+                <div class="achievement-text">
+                    <div class="achievement-title">Achievement Unlocked!</div>
+                    <div class="achievement-description">First Bet Placed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Matches Tab -->
+            <div id="matches" class="page active">
+                <div id="matches-list"></div>
+            </div>
+
+            <!-- Bet Slip Tab -->
+            <div id="betslip" class="page">
+                <div class="bet-slip-container">
+                    <div id="bet-slip-content">
+                        <p>No bets selected</p>
+                    </div>
+                    <div class="bet-slip-footer">
+                        <button id="place-bets-btn" class="place-bets-btn" disabled>Place Bets</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Bets Tab -->
+            <div id="mybets" class="page">
+                <div id="mybets-content">
+                    <p>No bets placed yet</p>
+                </div>
+            </div>
+
+            <!-- Rankings Tab -->
+            <div id="rankings" class="page">
+                <div id="rankings-content">
+                    <div class="leaderboard">
+                        <h3>🏆 Global Leaderboard</h3>
+                        <div id="leaderboard-list"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content profile-modal-content">
+            <div class="profile-header">
+                <h3>👤 Profile & Statistics</h3>
+                <button id="close-profile-btn" class="close-btn">✕</button>
+            </div>
+            
+            <div class="profile-body">
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="profile-balance">1000</div>
+                            <div class="stat-label">Current Balance</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="profile-total-bets">0</div>
+                            <div class="stat-label">Total Bets Placed</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="profile-biggest-odds">-</div>
+                            <div class="stat-label">Biggest Odds Hit</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="profile-total-won">0</div>
+                            <div class="stat-label">Total Coins Won</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- This Week's Progress -->
+                <div class="progress-section">
+                    <h4>📊 This Week's Progress</h4>
+                    <div class="progress-stats">
+                        <div class="progress-item">
+                            <span class="progress-label">Bets Placed:</span>
+                            <span class="progress-value" id="weekly-bets">0</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Coins Won:</span>
+                            <span class="progress-value" id="weekly-coins">0</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Best Odds:</span>
+                            <span class="progress-value" id="weekly-odds">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Bets -->
+                <div class="recent-bets-section">
+                    <h4>📋 Recent Bets</h4>
+                    <div id="recent-bets-list">
+                        <p class="no-bets">No bets placed yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal auth-modal">
+        <div class="modal-content auth-modal-content">
+            <div class="auth-header">
+                <h2>🏆 Welcome to ScoreLeague</h2>
+                <p>The ultimate free-to-play sports betting experience</p>
+            </div>
+            
+            <div class="auth-features">
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">
+                        <h4>Live Matches</h4>
+                        <p>Bet on real sports events with live odds</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-text">
+                        <h4>Skill-Based Betting</h4>
+                        <p>No real money - pure skill and strategy</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🏆</div>
+                    <div class="feature-text">
+                        <h4>Global Leaderboards</h4>
+                        <p>Compete with players worldwide</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">
+                        <h4>Statistics Tracking</h4>
+                        <p>Track your performance and progress</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="auth-buttons">
+                <button id="login-btn" class="auth-btn login-btn">Login</button>
+                <button id="register-btn" class="auth-btn register-btn">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="auth-service.js"></script>
+    <script src="auth-ui.js"></script>
+    
+    <script src="script_working.js?v=3.0"></script>
+    
+    <script>
+        console.log('🎯 FIXED HTML LOADED - Testing My Bets functionality...');
+        
+        // IMMEDIATE My Bets Test - Force tab switch and display
+        console.log('🎯 IMMEDIATE MY BETS TEST STARTING...');
+        
+        // Test direct DOM manipulation immediately
+        function forceMyBetsDisplay() {
+            console.log('🎯 FORCING MY BETS DISPLAY...');
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                console.log('🎯 Removed active from tab:', tab.getAttribute('data-tab'));
+            });
+            
+            // Add active to My Bets tab
+            const myBetsTab = document.querySelector('[data-tab="mybets"]');
+            if (myBetsTab) {
+                myBetsTab.classList.add('active');
+                console.log('🎯 My Bets tab activated:', myBetsTab);
+            } else {
+                console.error('🎯 My Bets tab not found!');
+            }
+            
+            // Remove active from all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                console.log('🎯 Removed active from page:', page.id);
+            });
+            
+            // Add active to My Bets page
+            const myBetsPage = document.getElementById('mybets');
+            if (myBetsPage) {
+                myBetsPage.classList.add('active');
+                console.log('🎯 My Bets page activated:', myBetsPage);
+            } else {
+                console.error('🎯 My Bets page not found!');
+            }
+            
+            console.log('🎯 DOM MANIPULATION COMPLETE - My Bets should now be visible!');
+        }
+        
+        // Run the test after a short delay to ensure DOM is ready
+        setTimeout(forceMyBetsDisplay, 2000);
+        
+        // Also try to call it when ScoreLeague is available
+        const checkScoreLeague = setInterval(() => {
+            if (window.scoreLeague) {
+                console.log('🎯 ScoreLeague found, calling renderMyBets...');
+                window.scoreLeague.renderMyBets();
+                clearInterval(checkScoreLeague);
+            }
+        }, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Multi-User Competition</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Authentication Screen */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .auth-container {
+            background: rgba(255,255,255,0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .auth-container h1 {
+            color: #27ae60;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-container p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .auth-container h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #27ae60;
+        }
+
+        .auth-btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        /* Main Game Styles */
+        .main-game {
+            display: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .profile-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .coins {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            animation: coinPulse 3s infinite;
+        }
+
+        @keyframes coinPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255,255,255,0.95);
+            margin: 1rem;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(39, 174, 96, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .content {
+            margin: 1rem;
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .match-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .match-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #27ae60;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .match-teams {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .match-league {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .match-time {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .match-markets {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .market {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .market-name {
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .market-odds {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .odds-button {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border: 2px solid #27ae60;
+            color: #27ae60;
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .odds-button:hover {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <h1>⚽ ScoreLeague</h1>
+            <p>Multi-User Competition</p>
+            <h2>Join the Competition</h2>
+            <div class="form-group">
+                <label>Choose Your Username</label>
+                <input type="text" id="username" placeholder="Enter username" maxlength="20">
+            </div>
+            <button class="auth-btn" onclick="login()">Join Game</button>
+            <div id="authError"></div>
+        </div>
+    </div>
+
+    <!-- Main Game -->
+    <div id="mainGame" class="main-game">
+        <div class="header">
+            <div class="logo">
+                ⚽ ScoreLeague
+            </div>
+            <div class="user-info">
+                <button class="profile-button" onclick="alert('Profile feature coming soon!')">
+                    👤
+                </button>
+                <div class="coins" id="coinsDisplay">
+                    1000 coins
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('matches')">⚽ Matches</button>
+            <button class="nav-tab" onclick="switchTab('betslip')">🎯 Bet Slip</button>
+            <button class="nav-tab" onclick="switchTab('mybets')">📋 My Bets</button>
+            <button class="nav-tab" onclick="switchTab('social')">🏆 Social</button>
+        </div>
+
+        <div class="content">
+            <div id="matches-content" class="tab-content active">
+                <h2>⚽ Live Matches (5 available)</h2>
+                <div id="matches-container">
+                    <!-- Matches will be loaded here -->
+                </div>
+            </div>
+
+            <div id="betslip-content" class="tab-content">
+                <h2>🎯 Your Bet Slip</h2>
+                <div id="betslip-items">
+                    <p>No bets selected yet. Click on odds to add bets!</p>
+                </div>
+            </div>
+
+            <div id="mybets-content" class="tab-content">
+                <h2>📋 My Bets</h2>
+                <div id="mybets-list">
+                    <p>No bets placed yet.</p>
+                </div>
+            </div>
+
+            <div id="social-content" class="tab-content">
+                <h2>🏆 Social & Rankings</h2>
+                <p>🚀 <strong>Multi-User Competition Ready!</strong></p>
+                <p>📱 Compete with friends in private leagues.</p>
+                <p>⚽ Real football matches with authentic betting experience.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Multi-user variables
+        const API_BASE = window.location.origin;
+        let currentUser = null;
+
+        // Demo matches
+        const demoMatches = [
+            {
+                id: 'match_1',
+                homeTeam: 'FC Schalke 04',
+                awayTeam: 'Hertha BSC',
+                league: '2. Bundesliga',
+                date: '2024-08-10',
+                time: '15:30',
+                markets: {
+                    '1x2': {
+                        '1': { label: 'Schalke Win', odds: 2.10 },
+                        'X': { label: 'Draw', odds: 3.40 },
+                        '2': { label: 'Hertha Win', odds: 3.20 }
+                    }
+                }
+            },
+            {
+                id: 'match_2',
+                homeTeam: 'Hamburger SV',
+                awayTeam: 'FC Köln',
+                league: '2. Bundesliga',
+                date: '2024-08-10',
+                time: '18:30',
+                markets: {
+                    '1x2': {
+                        '1': { label: 'Hamburg Win', odds: 1.95 },
+                        'X': { label: 'Draw', odds: 3.60 },
+                        '2': { label: 'Köln Win', odds: 3.80 }
+                    }
+                }
+            },
+            {
+                id: 'match_3',
+                homeTeam: 'Borussia Dortmund',
+                awayTeam: 'Bayern Munich',
+                league: 'Bundesliga',
+                date: '2024-08-11',
+                time: '18:30',
+                markets: {
+                    '1x2': {
+                        '1': { label: 'Dortmund Win', odds: 3.20 },
+                        'X': { label: 'Draw', odds: 3.80 },
+                        '2': { label: 'Bayern Win', odds: 2.05 }
+                    }
+                }
+            },
+            {
+                id: 'match_4',
+                homeTeam: 'Arsenal',
+                awayTeam: 'Manchester City',
+                league: 'Premier League',
+                date: '2024-08-11',
+                time: '16:30',
+                markets: {
+                    '1x2': {
+                        '1': { label: 'Arsenal Win', odds: 2.80 },
+                        'X': { label: 'Draw', odds: 3.40 },
+                        '2': { label: 'City Win', odds: 2.40 }
+                    }
+                }
+            },
+            {
+                id: 'match_5',
+                homeTeam: 'Real Madrid',
+                awayTeam: 'Barcelona',
+                league: 'La Liga',
+                date: '2024-08-12',
+                time: '21:00',
+                markets: {
+                    '1x2': {
+                        '1': { label: 'Real Win', odds: 2.20 },
+                        'X': { label: 'Draw', odds: 3.60 },
+                        '2': { label: 'Barca Win', odds: 3.00 }
+                    }
+                }
+            }
+        ];
+
+        // Session management
+        function saveUserSession(user) {
+            localStorage.setItem('scoreLeague_user', JSON.stringify(user));
+            localStorage.setItem('scoreLeague_lastLogin', new Date().toISOString());
+        }
+        
+        function loadUserSession() {
+            try {
+                const userData = localStorage.getItem('scoreLeague_user');
+                const lastLogin = localStorage.getItem('scoreLeague_lastLogin');
+                
+                if (userData && lastLogin) {
+                    const user = JSON.parse(userData);
+                    const loginTime = new Date(lastLogin);
+                    const now = new Date();
+                    
+                    // Session valid for 7 days
+                    if ((now - loginTime) < (7 * 24 * 60 * 60 * 1000)) {
+                        return user;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user session:', error);
+            }
+            return null;
+        }
+        
+        function clearUserSession() {
+            localStorage.removeItem('scoreLeague_user');
+            localStorage.removeItem('scoreLeague_lastLogin');
+        }
+
+        // Authentication
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            if (username.length < 2) {
+                showAuthError('Username must be at least 2 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    saveUserSession(currentUser);
+                    showMainGame();
+                    renderMatches();
+                } else {
+                    showAuthError(data.error);
+                }
+            } catch (error) {
+                showAuthError('Connection error. Please try again.');
+            }
+        }
+        
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => errorDiv.innerHTML = '', 5000);
+        }
+        
+        function showMainGame() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainGame').style.display = 'block';
+            document.getElementById('coinsDisplay').textContent = `${currentUser.coins} coins`;
+            
+            // Add logout button
+            const userInfo = document.querySelector('.user-info');
+            if (!document.getElementById('logoutBtn')) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.id = 'logoutBtn';
+                logoutBtn.className = 'logout-btn';
+                logoutBtn.innerHTML = '🚪 Logout';
+                logoutBtn.onclick = logout;
+                userInfo.insertBefore(logoutBtn, userInfo.firstChild);
+            }
+        }
+        
+        function logout() {
+            clearUserSession();
+            currentUser = null;
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainGame').style.display = 'none';
+            document.getElementById('username').value = '';
+            
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) logoutBtn.remove();
+        }
+        
+        function checkAutoLogin() {
+            const savedUser = loadUserSession();
+            if (savedUser) {
+                currentUser = savedUser;
+                showMainGame();
+                renderMatches();
+                return true;
+            }
+            return false;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-content').classList.add('active');
+        }
+
+        // Render matches
+        function renderMatches() {
+            const container = document.getElementById('matches-container');
+            container.innerHTML = demoMatches.map(match => `
+                <div class="match-card">
+                    <div class="match-header">
+                        <div class="match-teams">${match.homeTeam} vs ${match.awayTeam}</div>
+                        <div class="match-league">${match.league}</div>
+                    </div>
+                    <div class="match-time">${match.date} ${match.time}</div>
+                    <div class="match-markets">
+                        <div class="market">
+                            <div class="market-name">Match Result</div>
+                            <div class="market-odds">
+                                ${Object.entries(match.markets['1x2']).map(([key, value]) => `
+                                    <button class="odds-button" onclick="alert('Bet placed on ${value.label} @ ${value.odds}!')">
+                                        ${value.label}<br>${value.odds}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 ScoreLeague Multi-User Ready!');
+            
+            if (!checkAutoLogin()) {
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('mainGame').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

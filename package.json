@@ -1,0 +1,20 @@
+{
+  "name": "scoreleague",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local dev setup for ScoreLeague web app",
+  "scripts": {
+    "dev": "npx http-server -p 8080 -a 0.0.0.0 -c-1",
+    "live": "npx browser-sync start --server --port 8080 --files \"multiuser_client.html, *.js, *.css\" --no-ui --no-notify --host 0.0.0.0 --open external",
+    "tunnel:ngrok": "ngrok http 8080",
+    "tunnel:lt": "npx localtunnel --port 8080",
+    "server": "node server_multiuser.js",
+    "start:node": "node server_multiuser.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bets Test - ScoreLeague</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>ScoreLeague - My Bets Test</h1>
+                <div class="user-info">
+                    <div class="coin-counter">
+                        <span class="coin-icon">🪙</span>
+                        <span id="coin-count">820</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="navigation">
+            <button class="nav-tab" data-tab="matches">Matches</button>
+            <button class="nav-tab" data-tab="betslip">Bet Slip</button>
+            <button class="nav-tab active" data-tab="mybets">My Bets</button>
+            <button class="nav-tab" data-tab="rankings">Rankings</button>
+        </nav>
+
+        <main>
+            <!-- My Bets Page (Active by default) -->
+            <div id="mybets" class="page active">
+                <div class="page-header">
+                    <h2>My Bets</h2>
+                    <p>Your betting history and active bets</p>
+                </div>
+                <div id="mybets-content">
+                    <!-- Content will be populated by JavaScript -->
+                    <div class="loading">Loading your bets...</div>
+                </div>
+            </div>
+
+            <!-- Other pages (hidden) -->
+            <div id="matches" class="page">
+                <div class="page-header">
+                    <h2>Matches</h2>
+                </div>
+                <div id="matches-list"></div>
+            </div>
+
+            <div id="betslip" class="page">
+                <div class="page-header">
+                    <h2>Bet Slip</h2>
+                </div>
+                <div id="betslip-content"></div>
+            </div>
+
+            <div id="rankings" class="page">
+                <div class="page-header">
+                    <h2>Rankings</h2>
+                </div>
+                <div id="rankings-content"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load the main script -->
+    <script src="script_working.js?v=mybets_test_123"></script>
+
+    <script>
+        console.log('🎯 MY BETS TEST PAGE LOADED');
+        
+        // Wait for ScoreLeague to initialize, then force My Bets display
+        function initializeMyBetsTest() {
+            console.log('🎯 Initializing My Bets test...');
+            
+            if (window.scoreLeague) {
+                console.log('🎯 ScoreLeague found, rendering My Bets...');
+                
+                // Force render My Bets content
+                window.scoreLeague.renderMyBets();
+                
+                console.log('🎯 My Bets test complete!');
+            } else {
+                console.log('🎯 ScoreLeague not found, retrying...');
+                setTimeout(initializeMyBetsTest, 500);
+            }
+        }
+        
+        // Start the test after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM loaded, starting My Bets test...');
+            setTimeout(initializeMyBetsTest, 1000);
+        });
+        
+        // Also try immediately
+        setTimeout(initializeMyBetsTest, 2000);
+    </script>
+</body>
+</html>

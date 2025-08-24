@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Free Sports Betting</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
+    <link rel="stylesheet" href="enhanced-betting-styles.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    
+    <!-- EMBEDDED HORIZONTAL BETTING STYLES - DIRECT OVERRIDE -->
+    <style>
+        /* FORCE HORIZONTAL BETTING LAYOUT - BET365 INSPIRED */
+        
+        /* Match Card Enhancements */
+        .match-card.enhanced {
+            background: #ffffff !important;
+            border: 1px solid #e5e5e5 !important;
+            border-radius: 8px !important;
+            margin-bottom: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            transition: box-shadow 0.2s ease !important;
+        }
+
+        .match-card.enhanced:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Horizontal Match Layout */
+        .match-card.enhanced .match-header {
+            display: flex !important;
+            align-items: center !important;
+            padding: 12px !important;
+            background: #f8f9fa !important;
+            border-bottom: 1px solid #e5e5e5 !important;
+            min-height: 60px !important;
+        }
+
+        .match-info {
+            flex: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-width: 0 !important;
+        }
+
+        .match-time {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #666 !important;
+            min-width: 35px !important;
+            text-align: center !important;
+        }
+
+        .team-icons {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+        }
+
+        .team-icon {
+            width: 20px !important;
+            height: 20px !important;
+            background: #007bff !important;
+            color: white !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 10px !important;
+            font-weight: bold !important;
+        }
+
+        .match-teams {
+            flex: 1 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: #333 !important;
+            line-height: 1.3 !important;
+            min-width: 0 !important;
+        }
+
+        .match-score {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 2px !important;
+            min-width: 30px !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            color: #666 !important;
+        }
+
+        /* CRITICAL: Horizontal Betting Markets */
+        .betting-markets {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 1px !important;
+            background: #e5e5e5 !important;
+        }
+
+        /* CRITICAL: Horizontal Market Layout - Bet365 Inspired */
+        .market-section {
+            background: white !important;
+            padding: 12px 16px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            min-height: 52px !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+
+        .market-section:last-child {
+            border-bottom: none !important;
+        }
+
+        .market-title {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #333 !important;
+            min-width: 110px !important;
+            flex-shrink: 0 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        /* CRITICAL: Horizontal Odds Layout */
+        .market-odds {
+            display: flex !important;
+            gap: 8px !important;
+            flex: 1 !important;
+            justify-content: flex-end !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            max-width: 220px !important;
+        }
+
+        /* CRITICAL: Professional Betting Buttons */
+        .odds-button {
+            background: #ffffff !important;
+            border: 1px solid #d0d0d0 !important;
+            border-radius: 4px !important;
+            padding: 8px 12px !important;
+            min-width: 60px !important;
+            height: 38px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            font-size: 12px !important;
+            color: #333 !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .odds-button:hover {
+            background: #f0f8ff !important;
+            border-color: #007bff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15) !important;
+        }
+
+        .odds-button.selected {
+            background: #007bff !important;
+            border-color: #007bff !important;
+            color: white !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3) !important;
+        }
+
+        .odds-label {
+            font-size: 9px !important;
+            font-weight: 600 !important;
+            opacity: 0.8 !important;
+            line-height: 1 !important;
+        }
+
+        .odds-value {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            margin-top: 1px !important;
+        }
+
+        /* League Headers */
+        .league-header {
+            background: #007bff !important;
+            color: white !important;
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        .league-header h3 {
+            margin: 0 !important;
+            font-size: 13px !important;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .market-section {
+                padding: 10px 12px !important;
+                min-height: 48px !important;
+            }
+            
+            .market-title {
+                min-width: 90px !important;
+                font-size: 12px !important;
+            }
+            
+            .market-odds {
+                gap: 6px !important;
+                max-width: 180px !important;
+            }
+            
+            .odds-button {
+                min-width: 50px !important;
+                height: 36px !important;
+                padding: 6px 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Auth Modal -->
+        <div id="auth-modal" class="auth-modal">
+            <div class="auth-modal-content">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-auth-tab="login">Login</button>
+                    <button class="auth-tab" data-auth-tab="register">Register</button>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="login-form" class="auth-form active">
+                    <h2>Welcome Back!</h2>
+                    <form>
+                        <input type="email" id="login-email" placeholder="Email" required>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <button type="submit" id="login-btn">Login</button>
+                    </form>
+                    <p class="auth-link">Don't have an account? <a href="#" id="show-register">Sign up</a></p>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="register-form" class="auth-form">
+                    <h2>Join ScoreLeague!</h2>
+                    <form>
+                        <input type="text" id="register-username" placeholder="Username" required>
+                        <input type="email" id="register-email" placeholder="Email" required>
+                        <input type="password" id="register-password" placeholder="Password" required>
+                        <button type="submit" id="register-btn">Register</button>
+                    </form>
+                    <p class="auth-link">Already have an account? <a href="#" id="show-login">Login</a></p>
+                </div>
+            </div>
+        </div>
+
+        <header>
+            <div class="header-content">
+                <h1>ScoreLeague</h1>
+                <div class="user-info">
+                    <div class="coin-counter">
+                        <span class="coin-icon">🪙</span>
+                        <span id="coin-count">1000</span>
+                    </div>
+                    <button id="profile-btn" class="profile-btn">
+                        <span class="profile-icon">👤</span>
+                        <span id="username-display">Player</span>
+                    </button>
+                    <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile Modal -->
+        <div id="profile-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Player Profile</h2>
+                    <button class="close-btn" id="close-profile-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="profile-total-bets">0</div>
+                            <div class="stat-label">Total Bets</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="profile-coins-made">0</div>
+                            <div class="stat-label">Coins Made</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="profile-biggest-odds">0.0x</div>
+                            <div class="stat-label">Best Odds Hit</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="profile-total-odds">0.0x</div>
+                            <div class="stat-label">Total Successful Odds</div>
+                        </div>
+                    </div>
+                    
+                    <div class="weekly-progress">
+                        <h3>This Week's Progress</h3>
+                        <div class="progress-stats">
+                            <div class="progress-item">
+                                <span>Bets Placed:</span>
+                                <span id="weekly-bets">0</span>
+                            </div>
+                            <div class="progress-item">
+                                <span>Coins Won:</span>
+                                <span id="weekly-coins">0</span>
+                            </div>
+                            <div class="progress-item">
+                                <span>Best Streak:</span>
+                                <span id="weekly-streak">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button id="change-name-btn" class="btn-secondary">Change Username</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Username Change Modal -->
+        <div id="username-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Change Username</h2>
+                    <button class="close-btn" id="close-username-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="new-username" placeholder="Enter new username" maxlength="20">
+                    <div class="modal-actions">
+                        <button id="save-username" class="btn-primary">Save</button>
+                        <button id="cancel-username" class="btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="navigation">
+            <button class="nav-tab active" data-tab="matches">Matches</button>
+            <button class="nav-tab" data-tab="betslip">
+                Bet Slip
+                <span id="bet-count" class="bet-count">0</span>
+            </button>
+            <button class="nav-tab" data-tab="mybets" id="mybets-tab-final">My Bets</button>
+            <button class="nav-tab" data-tab="rankings">Rankings</button>
+        </nav>
+
+        <main>
+            <!-- Matches Page -->
+            <div id="matches" class="page active">
+                <div class="page-header">
+                    <h2>Live Matches</h2>
+                    <p>Place your bets on today's matches</p>
+                </div>
+                <div id="matches-list">
+                    <!-- Matches will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Bet Slip Page -->
+            <div id="betslip" class="page">
+                <div class="page-header">
+                    <h2>Bet Slip</h2>
+                    <p>Review and place your bets</p>
+                </div>
+                <div id="betslip-content">
+                    <div class="empty-betslip">
+                        <div class="empty-icon">📋</div>
+                        <h3>Your bet slip is empty</h3>
+                        <p>Add some bets from the matches to get started!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Bets Page -->
+            <div id="mybets" class="page">
+                <div class="page-header">
+                    <h2>My Bets</h2>
+                    <p>Your betting history and active bets</p>
+                </div>
+                <div id="mybets-content">
+                    <!-- Bet history will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Rankings Page -->
+            <div id="rankings" class="page">
+                <div class="page-header">
+                    <h2>Rankings</h2>
+                    <p>See how you stack up against other players</p>
+                </div>
+                <div id="rankings-content">
+                    <!-- Rankings will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Notification Container -->
+        <div id="notification-container"></div>
+    </div>
+
+    <!-- Load Scripts -->
+    <script src="auth-service.js"></script>
+    <script src="auth-ui.js"></script>
+    <script src="script_working.js?v=final_fix_999"></script>
+    
+    <!-- DEFINITIVE MY BETS FIX -->
+    <script>
+        console.log('🎯 DEFINITIVE MY BETS FIX LOADING...');
+        
+        function applyMyBetsFix() {
+            console.log('🎯 Applying My Bets fix...');
+            
+            const myBetsTab = document.getElementById('mybets-tab-final');
+            if (myBetsTab) {
+                console.log('🎯 My Bets tab found, setting up click handler...');
+                
+                // Clear any existing handlers
+                myBetsTab.onclick = null;
+                
+                // Add our definitive click handler
+                myBetsTab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🚀 MY BETS CLICKED - DEFINITIVE FIX WORKING!');
+                    
+                    // Direct tab switching
+                    if (window.scoreLeague && window.scoreLeague.switchTab) {
+                        console.log('🚀 Calling switchTab(mybets)...');
+                        window.scoreLeague.switchTab('mybets');
+                    } else {
+                        console.log('🚀 ScoreLeague not ready, trying direct DOM manipulation...');
+                        
+                        // Manual DOM manipulation as backup
+                        document.querySelectorAll('.nav-tab').forEach(tab => {
+                            tab.classList.remove('active');
+                        });
+                        document.querySelectorAll('.page').forEach(page => {
+                            page.classList.remove('active');
+                        });
+                        
+                        myBetsTab.classList.add('active');
+                        document.getElementById('mybets').classList.add('active');
+                        
+                        // Try to render bets if possible
+                        setTimeout(() => {
+                            if (window.scoreLeague && window.scoreLeague.renderMyBets) {
+                                window.scoreLeague.renderMyBets();
+                            }
+                        }, 100);
+                    }
+                    
+                    return false;
+                });
+                
+                console.log('✅ My Bets definitive fix applied!');
+            } else {
+                console.log('⏳ My Bets tab not found, retrying...');
+                setTimeout(applyMyBetsFix, 200);
+            }
+        }
+        
+        // Apply fix immediately and after delays
+        applyMyBetsFix();
+        setTimeout(applyMyBetsFix, 500);
+        setTimeout(applyMyBetsFix, 1000);
+        setTimeout(applyMyBetsFix, 2000);
+        
+        // Also apply when ScoreLeague is ready
+        const checkScoreLeague = setInterval(() => {
+            if (window.scoreLeague) {
+                console.log('🎯 ScoreLeague ready, applying final My Bets fix...');
+                applyMyBetsFix();
+                clearInterval(checkScoreLeague);
+            }
+        }, 100);
+    </script>
+</body>
+</html>

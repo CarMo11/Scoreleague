@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Free Sports Betting</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>ScoreLeague</h1>
+            <div class="header-info">
+                <div class="coin-counter"><span id="coin-amount">1000</span></div>
+                <button id="profile-btn" class="profile-btn">👤</button>
+                <div class="user-info">
+                    <span id="username">Anonymous</span>
+                    <button id="change-name-btn">⚙️</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="matches">Matches</button>
+            <button class="nav-tab" data-tab="betslip">Bet Slip <span id="betslip-count">0</span></button>
+            <button class="nav-tab" data-tab="mybets" onclick="console.log('🎯 MY BETS CLICKED DIRECTLY!'); if(window.scoreLeague) { window.scoreLeague.switchTab('mybets'); } else { console.error('ScoreLeague instance not found'); }">My Bets</button>
+            <button class="nav-tab" data-tab="rankings">Rankings</button>
+        </nav>
+
+        <!-- Achievement Notification -->
+        <div id="achievement-notification" class="achievement-notification">
+            <div class="achievement-content">
+                <div class="achievement-icon">🏆</div>
+                <div class="achievement-text">
+                    <div class="achievement-title">Achievement Unlocked!</div>
+                    <div class="achievement-description">First Bet Placed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Matches Tab -->
+            <div id="matches" class="page active">
+                <div id="matches-list"></div>
+            </div>
+            
+            <!-- Bet Slip -->
+            <div id="betslip" class="page">
+                <div class="betslip-header">
+                    <h3>Your Bet Slip</h3>
+                    <button id="clear-all-btn" class="clear-all-btn" style="display: none;">Clear All</button>
+                </div>
+                <div id="betslip-content" class="betslip-content">
+                    <div class="empty-betslip">
+                        <div class="empty-icon">🎯</div>
+                        <p><strong>Ready to start betting?</strong></p>
+                        <p>Tap on match odds to add them to your bet slip</p>
+                        <div class="empty-tip">
+                            <span class="tip-icon">💡</span>
+                            <span>Tip: You can combine multiple bets for higher odds!</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="betslip-actions">
+                    <div class="stake-input">
+                        <label for="total-stake">Stake (coins):</label>
+                        <div class="stake-controls">
+                            <input type="number" id="total-stake" min="1" value="10">
+                            <div class="quick-stakes">
+                                <button type="button" class="quick-stake-btn" data-amount="10">+10</button>
+                                <button type="button" class="quick-stake-btn" data-amount="50">+50</button>
+                                <button type="button" class="quick-stake-btn" data-amount="100">+100</button>
+                            </div>
+                        </div>
+                        <small>Available: <span id="available-coins">1000</span> coins</small>
+                    </div>
+                    <button id="place-bet-btn" class="place-bet-btn" disabled>Place Bets</button>
+                </div>
+            </div>
+
+            <!-- My Bets Tab -->
+            <div id="mybets" class="page">
+                <h2>My Placed Bets</h2>
+                <div id="mybets-content" class="mybets-content">
+                    <div class="empty-bets">
+                        <p>No bets placed yet</p>
+                        <p>Place some bets to see them here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rankings Tab -->
+            <div id="rankings" class="page">
+                <h2>Weekly Rankings</h2>
+                <div class="rankings-header">
+                    <p>Rankings based on revenue from successful bets only</p>
+                </div>
+                <div id="rankings-list" class="rankings-list">
+                    <!-- Rankings will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for changing username -->
+    <div id="username-modal" class="modal">
+        <div class="modal-content">
+            <h3>Enter Your Nickname</h3>
+            <input type="text" id="username-input" placeholder="Enter nickname" maxlength="20">
+            <div class="modal-actions">
+                <button id="save-username">Save</button>
+                <button id="cancel-username">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content profile-modal-content">
+            <div class="profile-header">
+                <h3>👤 Profile & Statistics</h3>
+                <button id="close-profile-btn" class="close-btn">✕</button>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Current Balance</div>
+                        <div class="stat-value" id="profile-balance">1000 coins</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Total Bets Placed</div>
+                        <div class="stat-value" id="profile-total-bets">0</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">💎</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Biggest Odds Hit</div>
+                        <div class="stat-value" id="profile-biggest-odds">-</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Total Coins Won</div>
+                        <div class="stat-value" id="profile-coins-won">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weekly Progress in Profile -->
+            <div class="profile-section">
+                <h4>📊 This Week's Progress</h4>
+                <div class="weekly-progress-profile">
+                    <div class="progress-header-profile">
+                        <div class="week-timer-profile">
+                            <span id="days-left">3</span> days left
+                        </div>
+                    </div>
+                    <div class="progress-stats-profile">
+                        <div class="stat-item-profile">
+                            <div class="stat-value-profile" id="coins-spent">150</div>
+                            <div class="stat-label-profile">Coins Spent</div>
+                        </div>
+                        <div class="stat-item-profile">
+                            <div class="stat-value-profile" id="bets-placed">8</div>
+                            <div class="stat-label-profile">Bets Placed</div>
+                        </div>
+                        <div class="stat-item-profile">
+                            <div class="stat-value-profile" id="win-rate">62%</div>
+                            <div class="stat-label-profile">Win Rate</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container-profile">
+                        <div class="progress-bar-profile">
+                            <div class="progress-fill-profile" id="weekly-progress-fill"></div>
+                        </div>
+                        <div class="progress-text-profile">
+                            <span id="weekly-coins-used">150</span> / <span id="weekly-coins-target">500</span> coins
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h4>Recent Bets</h4>
+                <div id="profile-recent-bets" class="recent-bets">
+                    <div class="no-bets">No bets placed yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="auth-service.js"></script>
+    <script src="auth-ui.js"></script>
+    
+    <script src="script_working.js?v=fixed_navigation_789" defer></script>
+    
+    <!-- INLINE MY BETS FIX - Bypasses caching issues -->
+    <script>
+        console.log('🔧 INLINE MY BETS FIX LOADING...');
+        
+        // Wait for DOM and ScoreLeague to be ready
+        function setupMyBetsFix() {
+            console.log('🔧 Setting up My Bets fix...');
+            
+            const myBetsTab = document.querySelector('[data-tab="mybets"]');
+            if (myBetsTab && window.scoreLeague) {
+                console.log('🔧 My Bets tab and ScoreLeague found, applying fix...');
+                
+                // Remove any existing click listeners by cloning
+                const newMyBetsTab = myBetsTab.cloneNode(true);
+                myBetsTab.parentNode.replaceChild(newMyBetsTab, myBetsTab);
+                
+                // Add our reliable click listener
+                newMyBetsTab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎆 MY BETS TAB CLICKED - INLINE FIX WORKING!');
+                    
+                    // Call switchTab method
+                    if (window.scoreLeague && window.scoreLeague.switchTab) {
+                        console.log('🎆 Calling switchTab(mybets)...');
+                        window.scoreLeague.switchTab('mybets');
+                    } else {
+                        console.error('🚫 ScoreLeague.switchTab not found');
+                    }
+                    
+                    return false;
+                });
+                
+                console.log('✅ My Bets inline fix applied successfully!');
+            } else {
+                console.log('⏳ My Bets tab or ScoreLeague not ready, retrying...');
+                setTimeout(setupMyBetsFix, 500);
+            }
+        }
+        
+        // Start the fix after DOM loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupMyBetsFix);
+        } else {
+            setupMyBetsFix();
+        }
+        
+        // Also try after a delay to ensure ScoreLeague is initialized
+        setTimeout(setupMyBetsFix, 1000);
+        setTimeout(setupMyBetsFix, 2000);
+    </script>
+</body>
+</html>

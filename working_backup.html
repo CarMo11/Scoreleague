@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Working Version</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: #ecf0f1;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .nav-tab.active { background: #3498db; color: white; }
+        .nav-tab:hover { background: #34495e; color: white; }
+
+        .tab-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .match-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .match-teams { font-size: 18px; font-weight: bold; color: #2c3e50; }
+        .match-time { font-size: 14px; color: #7f8c8d; }
+        .market-section { margin-bottom: 15px; }
+        .market-title { font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
+        .market-odds { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .odds-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            min-width: 80px;
+        }
+
+        .odds-button:hover { background: #2980b9; transform: translateY(-2px); }
+        .odds-button.selected { background: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.5); }
+
+        .stake-display {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .quick-amounts { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .quick-amount-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+            min-width: 60px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover { background: #2980b9; transform: translateY(-2px); }
+        input { width: 100%; padding: 10px; border: 2px solid #bdc3c7; border-radius: 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div></div>
+            <div>
+                <h1>🏆 ScoreLeague</h1>
+                <p>Free Sports Betting Platform</p>
+            </div>
+            <div style="text-align: right;">
+                <button onclick="showProfile()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; border-radius: 50%; margin-bottom: 5px;">👤</button>
+                <div style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 15px;">💰 <span id="coins">1000</span></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('matches')">Matches</button>
+            <button class="nav-tab" onclick="showTab('betslip')">Bet Slip <span id="betslip-count">(0)</span></button>
+            <button class="nav-tab" onclick="showTab('mybets')">My Bets</button>
+            <button class="nav-tab" onclick="showTab('rankings')">Rankings</button>
+        </div>
+
+        <div id="matches-tab" class="tab-content">
+            <h2>⚽ Premier League Matches</h2>
+            
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="match-teams">Manchester City vs Liverpool</div>
+                    <div class="match-time">15:30 • upcoming</div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Match Result (1X2)</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('1_1X2_1', 'Man City vs Liverpool', 'Man City Win', 2.1, this)">1 (2.1)</button>
+                        <button class="odds-button" onclick="toggleBet('1_1X2_X', 'Man City vs Liverpool', 'Draw', 3.4, this)">X (3.4)</button>
+                        <button class="odds-button" onclick="toggleBet('1_1X2_2', 'Man City vs Liverpool', 'Liverpool Win', 3.2, this)">2 (3.2)</button>
+                    </div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Total Goals</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('1_TG_O25', 'Man City vs Liverpool', 'Over 2.5', 1.85, this)">OVER 2.5 (1.85)</button>
+                        <button class="odds-button" onclick="toggleBet('1_TG_U25', 'Man City vs Liverpool', 'Under 2.5', 1.95, this)">UNDER 2.5 (1.95)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="match-teams">Arsenal vs Chelsea</div>
+                    <div class="match-time">18:00 • upcoming</div>
+                </div>
+                
+                <div class="market-section">
+                    <div class="market-title">Match Result (1X2)</div>
+                    <div class="market-odds">
+                        <button class="odds-button" onclick="toggleBet('2_1X2_1', 'Arsenal vs Chelsea', 'Arsenal Win', 2.3, this)">1 (2.3)</button>
+                        <button class="odds-button" onclick="toggleBet('2_1X2_X', 'Arsenal vs Chelsea', 'Draw', 3.1, this)">X (3.1)</button>
+                        <button class="odds-button" onclick="toggleBet('2_1X2_2', 'Arsenal vs Chelsea', 'Chelsea Win', 2.9, this)">2 (2.9)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="betslip-tab" class="tab-content" style="display: none;">
+            <h2>🎯 Your Bet Slip</h2>
+            <div id="betslip-content">
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div class="stake-display">💰 Your Stake: <span id="current-stake-display">10</span> coins</div>
+                    
+                    <div class="quick-amounts">
+                        <button class="quick-amount-btn" onclick="setQuickStake(5)">+5</button>
+                        <button class="quick-amount-btn" onclick="setQuickStake(10)">+10</button>
+                        <button class="quick-amount-btn" onclick="setQuickStake(25)">+25</button>
+                        <button class="quick-amount-btn" onclick="setQuickStake(50)">+50</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label for="total-stake">Custom Stake:</label>
+                        <input type="number" id="total-stake" value="10" min="1" max="100" onchange="updateTotalStake(this.value)">
+                    </div>
+                </div>
+                <p>No bets selected yet. Go to Matches to place bets!</p>
+            </div>
+        </div>
+
+        <div id="mybets-tab" class="tab-content" style="display: none;">
+            <h2>📊 My Bets</h2>
+            <div id="mybets-content"><p>No bets placed yet.</p></div>
+        </div>
+
+        <div id="rankings-tab" class="tab-content" style="display: none;">
+            <h2>🏆 Rankings</h2>
+            <div><strong>1. You</strong> - 1000 coins</div>
+        </div>
+    </div>
+
+    <script>
+        let betSlip = [];
+        let coins = 1000;
+        let selectedButtons = new Set();
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        function toggleBet(betId, match, selection, odds, buttonElement) {
+            const matchId = betId.split('_')[0];
+            
+            betSlip = betSlip.filter(bet => !bet.betId.startsWith(matchId + '_'));
+            selectedButtons.forEach(id => {
+                if (id.startsWith(matchId + '_')) {
+                    selectedButtons.delete(id);
+                    const btn = document.querySelector(`[onclick*="${id}"]`);
+                    if (btn) btn.classList.remove('selected');
+                }
+            });
+            
+            if (selectedButtons.has(betId)) {
+                selectedButtons.delete(betId);
+                buttonElement.classList.remove('selected');
+                betSlip = betSlip.filter(bet => bet.betId !== betId);
+            } else {
+                selectedButtons.add(betId);
+                buttonElement.classList.add('selected');
+                betSlip.push({ betId, match, selection, odds, stake: 10 });
+            }
+            
+            updateBetSlip();
+        }
+
+        function updateBetSlip() {
+            const content = document.getElementById('betslip-content');
+            const count = document.getElementById('betslip-count');
+            const currentStake = parseInt(document.getElementById('total-stake')?.value || 10);
+            
+            count.textContent = `(${betSlip.length})`;
+            
+            const stakeDisplay = document.getElementById('current-stake-display');
+            if (stakeDisplay) stakeDisplay.textContent = currentStake;
+            
+            if (betSlip.length === 0) {
+                content.innerHTML = `
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <div class="stake-display">💰 Your Stake: <span id="current-stake-display">${currentStake}</span> coins</div>
+                        <div class="quick-amounts">
+                            <button class="quick-amount-btn" onclick="setQuickStake(5)">+5</button>
+                            <button class="quick-amount-btn" onclick="setQuickStake(10)">+10</button>
+                            <button class="quick-amount-btn" onclick="setQuickStake(25)">+25</button>
+                            <button class="quick-amount-btn" onclick="setQuickStake(50)">+50</button>
+                        </div>
+                        <div><label for="total-stake">Custom Stake:</label>
+                        <input type="number" id="total-stake" value="${currentStake}" min="1" max="100" onchange="updateTotalStake(this.value)"></div>
+                    </div>
+                    <p>No bets selected yet. Go to Matches to place bets!</p>
+                `;
+                return;
+            }
+            
+            const totalOdds = betSlip.reduce((total, bet) => total * bet.odds, 1);
+            const potentialWin = (currentStake * totalOdds).toFixed(2);
+            
+            content.innerHTML = `
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div class="stake-display">💰 Your Stake: <span id="current-stake-display">${currentStake}</span> coins</div>
+                    <div class="quick-amounts">
+                        <button class="quick-amount-btn" onclick="setQuickStake(5)">+5</button>
+                        <button class="quick-amount-btn" onclick="setQuickStake(10)">+10</button>
+                        <button class="quick-amount-btn" onclick="setQuickStake(25)">+25</button>
+                        <button class="quick-amount-btn" onclick="setQuickStake(50)">+50</button>
+                    </div>
+                    <div><label for="total-stake">Custom Stake:</label>
+                    <input type="number" id="total-stake" value="${currentStake}" min="1" max="100" onchange="updateTotalStake(this.value)"></div>
+                </div>
+                
+                <h3>🎯 Your Bets (${betSlip.length})</h3>
+                ${betSlip.map(bet => `<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;"><strong>${bet.match}</strong><br>${bet.selection} @ ${bet.odds}</div>`).join('')}
+                
+                <div style="background: #3498db; color: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>Combined Odds: ${totalOdds.toFixed(2)}</strong><br>
+                    <strong>Potential Win: ${potentialWin} coins</strong>
+                </div>
+                
+                <button onclick="placeBets()" style="width: 100%; margin-top: 15px; padding: 15px;">PLACE BET - ${currentStake} COINS</button>
+            `;
+        }
+
+        function updateTotalStake(value) {
+            const stakeDisplay = document.getElementById('current-stake-display');
+            if (stakeDisplay) stakeDisplay.textContent = value;
+            updateBetSlip();
+        }
+
+        function setQuickStake(amount) {
+            const stakeInput = document.getElementById('total-stake');
+            if (stakeInput) {
+                const currentStake = parseInt(stakeInput.value) || 0;
+                const newStake = Math.min(currentStake + amount, 100);
+                stakeInput.value = newStake;
+                updateTotalStake(newStake);
+            }
+        }
+
+        function placeBets() {
+            if (betSlip.length === 0) return;
+            
+            const stake = parseInt(document.getElementById('total-stake').value) || 10;
+            if (stake > coins) {
+                alert('Not enough coins!');
+                return;
+            }
+            
+            coins -= stake;
+            document.getElementById('coins').textContent = coins;
+            
+            const totalOdds = betSlip.reduce((total, bet) => total * bet.odds, 1);
+            const potentialWin = (stake * totalOdds).toFixed(2);
+            
+            const myBetsContent = document.getElementById('mybets-content');
+            const betHtml = `<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <strong>🎯 ${betSlip.length > 1 ? 'Combination' : 'Single'} Bet</strong><br>
+                ${betSlip.map(bet => `${bet.match}: ${bet.selection} @ ${bet.odds}`).join('<br>')}<br>
+                <strong>Odds: ${totalOdds.toFixed(2)} • Win: ${potentialWin} coins</strong><br>
+                <span style="color: #f39c12;">Status: Pending</span>
+            </div>`;
+            
+            if (myBetsContent.innerHTML.includes('No bets placed yet')) {
+                myBetsContent.innerHTML = betHtml;
+            } else {
+                myBetsContent.innerHTML = betHtml + myBetsContent.innerHTML;
+            }
+            
+            betSlip.forEach(bet => {
+                const button = document.querySelector(`[onclick*="${bet.betId}"]`);
+                if (button) button.classList.remove('selected');
+            });
+            
+            betSlip = [];
+            selectedButtons.clear();
+            updateBetSlip();
+            alert('Bet placed successfully!');
+        }
+
+        function showProfile() {
+            alert(`👤 Your Profile\n💰 Balance: ${coins} coins\n🎯 Total Bets: 0`);
+        }
+
+        // Initialize
+        updateBetSlip();
+    </script>
+</body>
+</html>

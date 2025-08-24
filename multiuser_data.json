@@ -1,0 +1,730 @@
+{
+  "users": {
+    "user_175432520830b36e": {
+      "id": "user_175432520830b36e",
+      "username": "MoManeyyy",
+      "coins": 1000,
+      "joinedAt": "2025-08-04T18:33:28.395758",
+      "stats": {
+        "totalBets": 0,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
+    },
+    "user_17543257641297a1": {
+      "id": "user_17543257641297a1",
+      "username": "Mo",
+      "coins": 160,
+      "joinedAt": "2025-08-04T18:42:44.702471",
+      "stats": {
+        "totalBets": 26,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
+    },
+    "user_mebk690c8sion07txs": {
+      "id": "user_mebk690c8sion07txs",
+      "username": "windsurf_test",
+      "coins": 1000,
+      "joinedAt": "2025-08-14T15:32:54.686Z",
+      "stats": {
+        "totalBets": 0,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
+    },
+    "user_mebkh0cse2lq4mldnjq": {
+      "id": "user_mebkh0cse2lq4mldnjq",
+      "username": "mo",
+      "coins": 688,
+      "joinedAt": "2025-08-14T15:41:16.684Z",
+      "stats": {
+        "totalBets": 8,
+        "totalWinnings": 113,
+        "biggestWin": 113,
+        "totalCombinedOdds": 0
+      }
+    }
+  },
+  "leagues": {},
+  "matches": [
+    {
+      "id": "match_1",
+      "homeTeam": "FC Schalke 04",
+      "awayTeam": "Hertha BSC",
+      "league": "2. Bundesliga",
+      "date": "2024-08-10",
+      "time": "15:30",
+      "status": "upcoming",
+      "markets": {
+        "1x2": {
+          "1": {
+            "label": "Schalke Win",
+            "odds": 2.1
+          },
+          "2": {
+            "label": "Hertha Win",
+            "odds": 3.2
+          },
+          "X": {
+            "label": "Draw",
+            "odds": 3.4
+          }
+        },
+        "over_under": {
+          "over": {
+            "label": "Over 2.5",
+            "odds": 1.85
+          },
+          "under": {
+            "label": "Under 2.5",
+            "odds": 1.95
+          }
+        },
+        "both_teams": {
+          "yes": {
+            "label": "Both Score",
+            "odds": 1.7
+          },
+          "no": {
+            "label": "No Both Score",
+            "odds": 2.1
+          }
+        }
+      }
+    },
+    {
+      "id": "match_2",
+      "homeTeam": "Hamburger SV",
+      "awayTeam": "FC Köln",
+      "league": "2. Bundesliga",
+      "date": "2024-08-10",
+      "time": "18:30",
+      "status": "upcoming",
+      "markets": {
+        "1x2": {
+          "1": {
+            "label": "Hamburg Win",
+            "odds": 1.95
+          },
+          "2": {
+            "label": "Köln Win",
+            "odds": 3.8
+          },
+          "X": {
+            "label": "Draw",
+            "odds": 3.6
+          }
+        },
+        "over_under": {
+          "over": {
+            "label": "Over 2.5",
+            "odds": 1.9
+          },
+          "under": {
+            "label": "Under 2.5",
+            "odds": 1.9
+          }
+        },
+        "both_teams": {
+          "yes": {
+            "label": "Both Score",
+            "odds": 1.75
+          },
+          "no": {
+            "label": "No Both Score",
+            "odds": 2.05
+          }
+        }
+      }
+    },
+    {
+      "id": "match_3",
+      "homeTeam": "Borussia Dortmund",
+      "awayTeam": "Bayern Munich",
+      "league": "Bundesliga",
+      "date": "2024-08-11",
+      "time": "18:30",
+      "status": "upcoming",
+      "markets": {
+        "1x2": {
+          "1": {
+            "label": "Dortmund Win",
+            "odds": 3.2
+          },
+          "2": {
+            "label": "Bayern Win",
+            "odds": 2.05
+          },
+          "X": {
+            "label": "Draw",
+            "odds": 3.8
+          }
+        },
+        "over_under": {
+          "over": {
+            "label": "Over 2.5",
+            "odds": 1.65
+          },
+          "under": {
+            "label": "Under 2.5",
+            "odds": 2.25
+          }
+        },
+        "both_teams": {
+          "yes": {
+            "label": "Both Score",
+            "odds": 1.55
+          },
+          "no": {
+            "label": "No Both Score",
+            "odds": 2.4
+          }
+        }
+      }
+    },
+    {
+      "id": "match_4",
+      "homeTeam": "Arsenal",
+      "awayTeam": "Manchester City",
+      "league": "Premier League",
+      "date": "2024-08-11",
+      "time": "16:30",
+      "status": "upcoming",
+      "markets": {
+        "1x2": {
+          "1": {
+            "label": "Arsenal Win",
+            "odds": 2.8
+          },
+          "2": {
+            "label": "City Win",
+            "odds": 2.4
+          },
+          "X": {
+            "label": "Draw",
+            "odds": 3.4
+          }
+        },
+        "over_under": {
+          "over": {
+            "label": "Over 2.5",
+            "odds": 1.7
+          },
+          "under": {
+            "label": "Under 2.5",
+            "odds": 2.15
+          }
+        },
+        "both_teams": {
+          "yes": {
+            "label": "Both Score",
+            "odds": 1.6
+          },
+          "no": {
+            "label": "No Both Score",
+            "odds": 2.3
+          }
+        }
+      }
+    },
+    {
+      "id": "match_5",
+      "homeTeam": "Real Madrid",
+      "awayTeam": "Barcelona",
+      "league": "La Liga",
+      "date": "2024-08-12",
+      "time": "21:00",
+      "status": "upcoming",
+      "markets": {
+        "1x2": {
+          "1": {
+            "label": "Real Win",
+            "odds": 2.2
+          },
+          "2": {
+            "label": "Barca Win",
+            "odds": 3
+          },
+          "X": {
+            "label": "Draw",
+            "odds": 3.6
+          }
+        },
+        "over_under": {
+          "over": {
+            "label": "Over 2.5",
+            "odds": 1.8
+          },
+          "under": {
+            "label": "Under 2.5",
+            "odds": 2
+          }
+        },
+        "both_teams": {
+          "yes": {
+            "label": "Both Score",
+            "odds": 1.65
+          },
+          "no": {
+            "label": "No Both Score",
+            "odds": 2.2
+          }
+        }
+      }
+    }
+  ],
+  "bets": {
+    "user_mebkh0cse2lq4mldnjq": [
+      {
+        "id": "bet_mebkhjtae8s9swf07yc",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "match_1",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.4,
+        "stake": 50,
+        "potentialWin": 170,
+        "placedAt": "2025-08-14T15:41:41.903Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mebl994m7z6fmerv4d7",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 50,
+        "potentialWin": 113,
+        "placedAt": "2025-08-14T16:03:14.422Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_meblg3hm474ey7pgb7g",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 50,
+        "potentialWin": 113,
+        "placedAt": "2025-08-14T16:08:33.706Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_meblij12ih8xqpmd2t",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "total_goals",
+        "selection": "under",
+        "odds": 1.7,
+        "stake": 25,
+        "potentialWin": 43,
+        "placedAt": "2025-08-14T16:10:27.158Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_meblmtp4mx63mchit7",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 50,
+        "potentialWin": 113,
+        "placedAt": "2025-08-14T16:13:47.608Z",
+        "status": "won",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mee96lezwow4avzr9aq",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 50,
+        "potentialWin": 113,
+        "placedAt": "2025-08-16T12:48:33.515Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mee96lfd2wlv5b3l9vj",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.5,
+        "stake": 50,
+        "potentialWin": 125,
+        "placedAt": "2025-08-16T12:48:33.529Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mee982ycoqiccj3oocn",
+        "userId": "user_mebkh0cse2lq4mldnjq",
+        "matchId": "combo",
+        "market": "combi",
+        "selection": "combo_2",
+        "odds": 3.2399999999999998,
+        "stake": 100,
+        "potentialWin": 324,
+        "placedAt": "2025-08-16T12:49:42.900Z",
+        "status": "pending",
+        "leagueIds": []
+      }
+    ],
+    "user_17543257641297a1": [
+      {
+        "id": "bet_mega64gc3hg6mkifohn",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 3.3,
+        "stake": 50,
+        "potentialWin": 165,
+        "placedAt": "2025-08-17T22:51:43.500Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mega77n8bv6k69atkm",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 25,
+        "potentialWin": 56,
+        "placedAt": "2025-08-17T22:52:34.292Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megcrs3sw1y90lwzfzk",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 10,
+        "potentialWin": 23,
+        "placedAt": "2025-08-18T00:04:33.160Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megctnojcrmj92edqr7",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 3.3,
+        "stake": 10,
+        "potentialWin": 33,
+        "placedAt": "2025-08-18T00:06:00.739Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megcuhm14bo7vrqgtq2",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 3.3,
+        "stake": 25,
+        "potentialWin": 83,
+        "placedAt": "2025-08-18T00:06:39.529Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mege8gcs78jyt1805bc",
+        "userId": "user_17543257641297a1",
+        "matchId": "match_1",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.4,
+        "stake": 10,
+        "potentialWin": 34,
+        "placedAt": "2025-08-18T00:45:30.700Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mege90wdv20846uf1e",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 10,
+        "potentialWin": 33,
+        "placedAt": "2025-08-18T00:45:57.325Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_mege9m93q80xdjpkgbn",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 3.3,
+        "stake": 25,
+        "potentialWin": 83,
+        "placedAt": "2025-08-18T00:46:24.999Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megfiz9pj4zkuhhtq7",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 3.3,
+        "stake": 25,
+        "potentialWin": 83,
+        "placedAt": "2025-08-18T01:21:41.389Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megfiza9b1p4lm47kd",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.4,
+        "stake": 25,
+        "potentialWin": 85,
+        "placedAt": "2025-08-18T01:21:41.409Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megfk06w68ji032jqlc",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.25,
+        "stake": 25,
+        "potentialWin": 56,
+        "placedAt": "2025-08-18T01:22:29.240Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megfk07befxxtgsob7o",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.4,
+        "stake": 50,
+        "potentialWin": 170,
+        "placedAt": "2025-08-18T01:22:29.255Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megfm9jig4ogn14ir1u",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.4,
+        "stake": 50,
+        "potentialWin": 170,
+        "placedAt": "2025-08-18T01:24:14.670Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megfm9jy9y1mtvdcdhs",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 50,
+        "potentialWin": 165,
+        "placedAt": "2025-08-18T01:24:14.686Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megwtfxn5hfusoubr33",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 50,
+        "potentialWin": 165,
+        "placedAt": "2025-08-18T09:25:43.019Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megxgbo13efhtk5u6a9",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 25,
+        "potentialWin": 83,
+        "placedAt": "2025-08-18T09:43:30.577Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megxgboic9uj6nm6fwi",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 2.87,
+        "stake": 50,
+        "potentialWin": 144,
+        "placedAt": "2025-08-18T09:43:30.594Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megyeip5cpcz77yeu0f",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 25,
+        "potentialWin": 83,
+        "placedAt": "2025-08-18T10:10:05.993Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megyeiptu202nwhzcsb",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 2.87,
+        "stake": 25,
+        "potentialWin": 72,
+        "placedAt": "2025-08-18T10:10:06.017Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megyevq6sw7ipmyprgn",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 50,
+        "potentialWin": 165,
+        "placedAt": "2025-08-18T10:10:22.878Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megyevqpps6gttvyhqd",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.4,
+        "stake": 50,
+        "potentialWin": 170,
+        "placedAt": "2025-08-18T10:10:22.897Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megyjmkxuo2b3e5p50i",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 3.3,
+        "stake": 50,
+        "potentialWin": 165,
+        "placedAt": "2025-08-18T10:14:04.305Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megyjmlh7fhevq7mypf",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "away",
+        "odds": 2.5,
+        "stake": 50,
+        "potentialWin": 125,
+        "placedAt": "2025-08-18T10:14:04.325Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megz10p4ovcaac7kte",
+        "userId": "user_17543257641297a1",
+        "matchId": "scpreußenmünster-scpaderborn07",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.3,
+        "stake": 25,
+        "potentialWin": 83,
+        "placedAt": "2025-08-18T10:27:35.752Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megz10piu8e5ttnojka",
+        "userId": "user_17543257641297a1",
+        "matchId": "1.fcnürnberg-darmstadt98",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 2.87,
+        "stake": 25,
+        "potentialWin": 72,
+        "placedAt": "2025-08-18T10:27:35.766Z",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_megz10q4pvkshj0apzt",
+        "userId": "user_17543257641297a1",
+        "matchId": "hannover96-hamburgersv",
+        "market": "match_result",
+        "selection": "home",
+        "odds": 2.3,
+        "stake": 25,
+        "potentialWin": 57,
+        "placedAt": "2025-08-18T10:27:35.788Z",
+        "status": "pending",
+        "leagueIds": []
+      }
+    ]
+  },
+  "version": "1.0.0",
+  "lastUpdated": "2025-08-18T10:27:35.788Z"
+}

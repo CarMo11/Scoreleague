@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug My Bets</title>
+</head>
+<body>
+    <h1>Debug My Bets Functionality</h1>
+    <button onclick="testMyBets()">Test My Bets</button>
+    <button onclick="addTestBet()">Add Test Bet</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <div id="output"></div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+
+        function testMyBets() {
+            log('=== TESTING MY BETS FUNCTIONALITY ===');
+            
+            // Check localStorage
+            const storedBets = localStorage.getItem('placedBets');
+            log('Raw localStorage placedBets: ' + storedBets);
+            
+            if (storedBets) {
+                try {
+                    const parsedBets = JSON.parse(storedBets);
+                    log('Parsed bets: ' + JSON.stringify(parsedBets, null, 2));
+                    log('Number of bets: ' + parsedBets.length);
+                } catch (error) {
+                    log('Error parsing bets: ' + error.message);
+                }
+            } else {
+                log('No bets found in localStorage');
+            }
+            
+            // Check userCoins
+            const userCoins = localStorage.getItem('userCoins');
+            log('User coins: ' + userCoins);
+            
+            // Check if ScoreLeague instance exists
+            if (window.parent && window.parent.scoreLeague) {
+                log('ScoreLeague instance found in parent window');
+                const placedBets = window.parent.scoreLeague.placedBets;
+                log('ScoreLeague placedBets array: ' + JSON.stringify(placedBets, null, 2));
+                log('ScoreLeague placedBets length: ' + placedBets.length);
+            } else {
+                log('ScoreLeague instance not found');
+            }
+        }
+
+        function addTestBet() {
+            log('Adding test bet...');
+            const testBet = {
+                id: Date.now(),
+                userId: 'momo',
+                totalStake: 50,
+                totalOdds: 3.8,
+                potentialWin: 190,
+                placedAt: new Date().toISOString(),
+                status: 'pending',
+                bets: [{
+                    matchId: 1,
+                    betType: 'home',
+                    odds: 3.8,
+                    homeTeam: 'Tottenham',
+                    awayTeam: 'Manchester City',
+                    league: 'Premier League'
+                }]
+            };
+            
+            const existingBets = JSON.parse(localStorage.getItem('placedBets') || '[]');
+            existingBets.push(testBet);
+            localStorage.setItem('placedBets', JSON.stringify(existingBets));
+            
+            log('Test bet added: ' + JSON.stringify(testBet, null, 2));
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('placedBets');
+            localStorage.removeItem('userCoins');
+            log('Storage cleared');
+        }
+    </script>
+</body>
+</html>

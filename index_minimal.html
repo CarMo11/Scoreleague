@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Test Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .match-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .match-teams {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .odds-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .odds-button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚽ ScoreLeague - Test Version</h1>
+        <p>💰 1000 coins</p>
+    </div>
+    
+    <div class="match-card">
+        <div class="match-teams">Manchester City vs Liverpool</div>
+        <div>15:30 • upcoming</div>
+        <br>
+        <button class="odds-button">Man City Win (2.1)</button>
+        <button class="odds-button">Draw (3.4)</button>
+        <button class="odds-button">Liverpool Win (3.2)</button>
+    </div>
+    
+    <div class="match-card">
+        <div class="match-teams">Arsenal vs Chelsea</div>
+        <div>18:00 • live • 1-0</div>
+        <br>
+        <button class="odds-button">Arsenal Win (1.95)</button>
+        <button class="odds-button">Draw (3.6)</button>
+        <button class="odds-button">Chelsea Win (3.8)</button>
+    </div>
+    
+    <div class="match-card">
+        <div class="match-teams">Tottenham vs Newcastle</div>
+        <div>20:30 • upcoming</div>
+        <br>
+        <button class="odds-button">Tottenham Win (1.8)</button>
+        <button class="odds-button">Draw (3.5)</button>
+        <button class="odds-button">Newcastle Win (4.2)</button>
+    </div>
+    
+    <script>
+        console.log('Minimal ScoreLeague loaded!');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded - matches should be visible!');
+        });
+    </script>
+</body>
+</html>

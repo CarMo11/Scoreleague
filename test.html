@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Test</title>
+</head>
+<body>
+    <h1>JavaScript Test</h1>
+    <div id="test-output"></div>
+    
+    <script>
+        console.log('Test script is running');
+        document.getElementById('test-output').innerHTML = 'JavaScript is working!';
+        
+        // Test if the main script has syntax errors
+        try {
+            console.log('Testing ScoreLeague class...');
+            // This will fail if there's a syntax error in the main script
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('test-output').innerHTML = 'Error: ' + error.message;
+        }
+    </script>
+    
+    <script src="script_working.js"></script>
+</body>
+</html>

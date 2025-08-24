@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Free Sports Betting</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="enhanced-betting-styles.css?v=horizontal_layout_001">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-content">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-auth-tab="login">Login</button>
+                <button class="auth-tab" data-auth-tab="register">Register</button>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form active">
+                <h2>Welcome Back!</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button id="login-btn" class="auth-btn">Login</button>
+                <p>Don't have an account? <a href="#" data-switch-to="register">Register</a></p>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="register-form" class="auth-form">
+                <h2>Join ScoreLeague!</h2>
+                <input type="text" id="register-username" placeholder="Username" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Password" required>
+                <button id="register-btn" class="auth-btn">Register</button>
+                <p>Already have an account? <a href="#" data-switch-to="login">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>ScoreLeague</h1>
+                <div class="header-right">
+                    <div class="coins-display">
+                        <span class="coin-icon">🪙</span>
+                        <span id="coin-count">1000</span>
+                    </div>
+                    <button class="profile-btn" id="profile-btn">
+                        <span class="profile-icon">👤</span>
+                        <span id="username-display">Player</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="matches">Matches</button>
+            <button class="nav-tab" data-tab="betslip">
+                Bet Slip <span id="betslip-count" class="bet-count">0</span>
+            </button>
+            <button class="nav-tab" data-tab="mybets" id="mybets-tab-horizontal">My Bets</button>
+            <button class="nav-tab" data-tab="rankings">Rankings</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Matches Page -->
+            <div id="matches" class="page active">
+                <div class="page-header">
+                    <h2>Live Matches</h2>
+                    <p>Place your bets on today's matches</p>
+                </div>
+                <div id="matches-list" class="matches-list">
+                    <!-- Matches will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Bet Slip Page -->
+            <div id="betslip" class="page">
+                <div class="page-header">
+                    <h2>Your Bet Slip</h2>
+                    <p>Review your selections</p>
+                </div>
+                <div id="betslip-content" class="betslip-content">
+                    <div class="empty-betslip">
+                        <p>No bets selected yet</p>
+                        <p>Click on odds to add them to your bet slip</p>
+                    </div>
+                </div>
+                <div id="betslip-summary" class="betslip-summary" style="display: none;">
+                    <div class="summary-row">
+                        <span>Total Stake:</span>
+                        <span id="total-stake">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Potential Win:</span>
+                        <span id="potential-win">0</span>
+                    </div>
+                    <button id="place-bet-btn" class="place-bet-btn">Place Bet</button>
+                </div>
+            </div>
+
+            <!-- My Bets Page -->
+            <div id="mybets" class="page">
+                <div class="page-header">
+                    <h2>My Bets</h2>
+                    <p>Your betting history</p>
+                </div>
+                <div id="mybets-content" class="mybets-content">
+                    <!-- My bets will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Rankings Page -->
+            <div id="rankings" class="page">
+                <div class="page-header">
+                    <h2>Leaderboard</h2>
+                    <p>Top players this week</p>
+                </div>
+                <div id="rankings-content" class="rankings-content">
+                    <!-- Rankings will be rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Player Profile</h2>
+                <button class="close-btn" id="close-profile">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <h3>Total Coins</h3>
+                        <p id="profile-coins">1000</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Bets Placed</h3>
+                        <p id="profile-bets">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Biggest Win</h3>
+                        <p id="profile-biggest-win">0</p>
+                    </div>
+                </div>
+                
+                <!-- Weekly Progress Section -->
+                <div class="weekly-progress">
+                    <h3>This Week's Progress</h3>
+                    <div class="progress-stats">
+                        <div class="progress-item">
+                            <span>Coins Used:</span>
+                            <span id="weekly-coins-used">0</span> / <span id="weekly-coins-target">500</span>
+                        </div>
+                        <div class="progress-item">
+                            <span>Bets Placed:</span>
+                            <span id="weekly-bets-placed">0</span>
+                        </div>
+                        <div class="progress-item">
+                            <span>Days Left:</span>
+                            <span id="days-left">7</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="weekly-progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="auth-service.js"></script>
+    <script src="database-service.js"></script>
+    <script src="script_working.js?v=horizontal_layout_001"></script>
+    
+    <script>
+        // 🎯 DEFINITIVE HORIZONTAL LAYOUT FIX
+        console.log('🎯 HORIZONTAL LAYOUT FIX LOADING...');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Apply My Bets fix for horizontal layout
+            function applyMyBetsFix() {
+                console.log('🎯 Applying My Bets fix for horizontal layout...');
+                const myBetsTab = document.getElementById('mybets-tab-horizontal');
+                if (myBetsTab) {
+                    console.log('🎯 My Bets tab found, setting up click handler...');
+                    myBetsTab.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('🎯 My Bets tab clicked!');
+                        if (window.scoreLeague) {
+                            window.scoreLeague.switchTab('mybets');
+                        }
+                    });
+                    console.log('✅ My Bets horizontal fix applied!');
+                } else {
+                    console.log('❌ My Bets tab not found');
+                }
+            }
+            
+            // Apply fix immediately and with delays
+            applyMyBetsFix();
+            setTimeout(applyMyBetsFix, 500);
+            setTimeout(applyMyBetsFix, 1000);
+            setTimeout(applyMyBetsFix, 2000);
+        });
+        
+        // Apply fix when ScoreLeague is ready
+        window.addEventListener('load', function() {
+            console.log('🎯 ScoreLeague ready, applying horizontal My Bets fix...');
+            setTimeout(function() {
+                const myBetsTab = document.getElementById('mybets-tab-horizontal');
+                if (myBetsTab && window.scoreLeague) {
+                    myBetsTab.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('🎯 My Bets horizontal tab clicked!');
+                        window.scoreLeague.switchTab('mybets');
+                    });
+                    console.log('✅ My Bets horizontal fix applied!');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

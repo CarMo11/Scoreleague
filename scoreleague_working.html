@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreLeague - Free Sports Betting</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .odds-button.selected {
+            background-color: #4CAF50 !important;
+            color: white !important;
+            border-color: #4CAF50 !important;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3) !important;
+        }
+        .notification {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>ScoreLeague</h1>
+                <div class="user-info">
+                    <div class="coin-counter">
+                        <span class="coin-icon">🪙</span>
+                        <span id="coin-count">1000</span>
+                    </div>
+                    <div>Welcome, <strong id="username-display">Player</strong>!</div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="matches">Matches</button>
+            <button class="nav-tab" data-tab="betslip">Bet Slip (<span id="betslip-count">0</span>)</button>
+            <button class="nav-tab" data-tab="mybets">My Bets</button>
+        </nav>
+
+        <main>
+            <div id="matches" class="page active">
+                <div class="page-header"><h2>Live Matches</h2></div>
+                <div id="matches-list"></div>
+            </div>
+
+            <div id="betslip" class="page">
+                <div class="page-header"><h2>Your Bet Slip</h2></div>
+                <div id="betslip-content">
+                    <div class="empty-betslip">
+                        <p>No bets selected yet</p>
+                        <p>Select odds from matches to add them here</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mybets" class="page">
+                <div class="page-header"><h2>My Betting History</h2></div>
+                <div id="mybets-content">
+                    <div class="empty-bets">
+                        <p>No bets placed yet</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class ScoreLeague {
+            constructor() {
+                this.betSlip = [];
+                this.userCoins = 1000;
+                this.mockMatches = [
+                    {
+                        id: 1, homeTeam: 'Manchester City', awayTeam: 'Liverpool', 
+                        league: 'Premier League', time: '15:30', status: 'upcoming',
+                        markets: { match_result: { home: 2.1, draw: 3.4, away: 3.2 } }
+                    },
+                    {
+                        id: 2, homeTeam: 'Arsenal', awayTeam: 'Chelsea',
+                        league: 'Premier League', time: '18:00', status: 'live',
+                        markets: { match_result: { home: 1.95, draw: 3.6, away: 3.8 } }
+                    }
+                ];
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.renderMatches();
+            }
+            
+            setupEventListeners() {
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const targetTab = e.target.dataset.tab;
+                        this.switchTab(targetTab);
+                    });
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.odds-button')) {
+                        this.handleOddsClick(e.target.closest('.odds-button'));
+                    }
+                });
+            }
+            
+            switchTab(tabName) {
+                document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                document.getElementById(tabName).classList.add('active');
+            }
+            
+            renderMatches() {
+                const matchesList = document.getElementById('matches-list');
+                let html = '';
+                
+                this.mockMatches.forEach(match => {
+                    html += `
+                        <div class="match-card">
+                            <div class="match-header">
+                                <div class="match-teams">${match.homeTeam} vs ${match.awayTeam}</div>
+                                <div>${match.time} - ${match.league}</div>
+                            </div>
+                            <div class="market-section">
+                                <div class="market-title">Match Result</div>
+                                <div class="market-odds">
+                                    <button class="odds-button" 
+                                            data-match-id="${match.id}" 
+                                            data-market="match_result" 
+                                            data-selection="home"
+                                            data-odds="${match.markets.match_result.home}">
+                                        1: ${match.markets.match_result.home}
+                                    </button>
+                                    <button class="odds-button" 
+                                            data-match-id="${match.id}" 
+                                            data-market="match_result" 
+                                            data-selection="draw"
+                                            data-odds="${match.markets.match_result.draw}">
+                                        X: ${match.markets.match_result.draw}
+                                    </button>
+                                    <button class="odds-button" 
+                                            data-match-id="${match.id}" 
+                                            data-market="match_result" 
+                                            data-selection="away"
+                                            data-odds="${match.markets.match_result.away}">
+                                        2: ${match.markets.match_result.away}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                matchesList.innerHTML = html;
+            }
+            
+            handleOddsClick(button) {
+                const matchId = parseInt(button.dataset.matchId);
+                const market = button.dataset.market;
+                const selection = button.dataset.selection;
+                const odds = parseFloat(button.dataset.odds);
+                
+                const match = this.mockMatches.find(m => m.id === matchId);
+                if (!match) return;
+                
+                const existingIndex = this.betSlip.findIndex(b => 
+                    b.matchId === matchId && b.market === market && b.selection === selection
+                );
+                
+                if (existingIndex !== -1) {
+                    this.betSlip.splice(existingIndex, 1);
+                    button.classList.remove('selected');
+                } else {
+                    const existingMatchBet = this.betSlip.findIndex(b => b.matchId === matchId);
+                    if (existingMatchBet !== -1) {
+                        const oldBet = this.betSlip[existingMatchBet];
+                        const oldButton = document.querySelector(
+                            `[data-match-id="${matchId}"][data-market="${oldBet.market}"][data-selection="${oldBet.selection}"]`
+                        );
+                        if (oldButton) oldButton.classList.remove('selected');
+                        this.betSlip.splice(existingMatchBet, 1);
+                    }
+                    
+                    const bet = {
+                        id: Date.now(),
+                        matchId, market, selection, odds,
+                        homeTeam: match.homeTeam,
+                        awayTeam: match.awayTeam,
+                        league: match.league,
+                        betDescription: this.getBetDescription(selection, match)
+                    };
+                    
+                    this.betSlip.push(bet);
+                    button.classList.add('selected');
+                }
+                
+                this.updateBetSlip();
+                this.showNotification();
+            }
+            
+            getBetDescription(selection, match) {
+                if (selection === 'home') return `${match.homeTeam} Win`;
+                if (selection === 'away') return `${match.awayTeam} Win`;
+                if (selection === 'draw') return 'Draw';
+                return selection;
+            }
+            
+            updateBetSlip() {
+                document.getElementById('betslip-count').textContent = this.betSlip.length;
+                
+                const content = document.getElementById('betslip-content');
+                if (this.betSlip.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-betslip">
+                            <p>No bets selected yet</p>
+                            <p>Select odds from matches to add them here</p>
+                        </div>
+                    `;
+                } else {
+                    let totalOdds = 1;
+                    let html = '<div class="betslip-bets">';
+                    
+                    this.betSlip.forEach(bet => {
+                        totalOdds *= bet.odds;
+                        html += `
+                            <div class="bet-item">
+                                <div class="bet-match">
+                                    <div class="bet-teams">${bet.homeTeam} vs ${bet.awayTeam}</div>
+                                    <div class="bet-league">${bet.league}</div>
+                                </div>
+                                <div class="bet-selection">
+                                    <div class="bet-type">${bet.betDescription}</div>
+                                    <div class="bet-odds">${bet.odds}</div>
+                                </div>
+                                <button class="remove-bet-btn" onclick="app.removeBet(${bet.id})">✕</button>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        </div>
+                        <div class="betslip-summary">
+                            <div class="total-odds">
+                                <span>Combined Odds:</span>
+                                <span>${totalOdds.toFixed(2)}</span>
+                            </div>
+                            <div class="stake-input-container">
+                                <label>Stake:</label>
+                                <input type="number" id="stake-input" min="10" max="1000" value="10">
+                                <span>coins</span>
+                            </div>
+                            <div class="potential-win">
+                                <span>Potential Win:</span>
+                                <span id="potential-win-amount">${(10 * totalOdds).toFixed(0)}</span>
+                                <span>coins</span>
+                            </div>
+                            <button class="place-bet-btn" onclick="app.placeBets()">Place Bet</button>
+                        </div>
+                    `;
+                    
+                    content.innerHTML = html;
+                    
+                    const stakeInput = document.getElementById('stake-input');
+                    if (stakeInput) {
+                        stakeInput.addEventListener('input', () => {
+                            const stake = parseInt(stakeInput.value) || 0;
+                            document.getElementById('potential-win-amount').textContent = (stake * totalOdds).toFixed(0);
+                        });
+                    }
+                }
+            }
+            
+            removeBet(betId) {
+                const index = this.betSlip.findIndex(bet => bet.id === betId);
+                if (index !== -1) {
+                    const bet = this.betSlip[index];
+                    this.betSlip.splice(index, 1);
+                    
+                    const button = document.querySelector(
+                        `[data-match-id="${bet.matchId}"][data-market="${bet.market}"][data-selection="${bet.selection}"]`
+                    );
+                    if (button) button.classList.remove('selected');
+                    
+                    this.updateBetSlip();
+                }
+            }
+            
+            placeBets() {
+                if (this.betSlip.length === 0) return;
+                
+                const stake = parseInt(document.getElementById('stake-input')?.value) || 10;
+                if (stake > this.userCoins) {
+                    alert('Insufficient coins!');
+                    return;
+                }
+                
+                this.userCoins -= stake;
+                document.getElementById('coin-count').textContent = this.userCoins;
+                
+                this.betSlip = [];
+                document.querySelectorAll('.odds-button.selected').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                this.updateBetSlip();
+                
+                this.showNotification('Bet placed successfully!');
+            }
+            
+            showNotification(message = `${this.betSlip.length} bet(s) selected`) {
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+            }
+        }
+        
+        const app = new ScoreLeague();
+        window.app = app;
+        
+        console.log('✅ ScoreLeague loaded successfully!');
+    </script>
+</body>
+</html>

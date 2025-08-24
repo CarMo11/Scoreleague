@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ScoreLeague Icon Generator</title>
+</head>
+<body>
+    <h2>ScoreLeague PWA Icon Generator</h2>
+    <p>This will generate placeholder icons for the PWA. Click the button below:</p>
+    <button onclick="generateIcons()">Generate Icons</button>
+    <div id="status"></div>
+    
+    <script>
+        function generateIcons() {
+            const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+            const status = document.getElementById('status');
+            status.innerHTML = '<p>Generating icons...</p>';
+            
+            sizes.forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                // Create gradient background
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#3498db');
+                gradient.addColorStop(1, '#2c3e50');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+                
+                // Add ScoreLeague logo/text
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size/8}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Draw "SL" letters
+                ctx.font = `bold ${size/3}px Arial`;
+                ctx.fillText('SL', size/2, size/2 - size/8);
+                
+                // Draw "ScoreLeague" text
+                ctx.font = `${size/12}px Arial`;
+                ctx.fillText('ScoreLeague', size/2, size/2 + size/6);
+                
+                // Add soccer ball icon
+                ctx.beginPath();
+                ctx.arc(size/2, size/4, size/12, 0, 2 * Math.PI);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Convert to blob and download
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `icon-${size}x${size}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            });
+            
+            status.innerHTML = '<p>✅ Icons generated! Check your downloads folder and move them to the icons/ directory.</p>';
+        }
+    </script>
+</body>
+</html>
