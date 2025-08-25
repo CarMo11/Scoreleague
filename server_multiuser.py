@@ -513,6 +513,13 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             })
         
         elif path.startswith('/api/matches/') and path.endswith('/settle'):
+            # Admin protection (enabled only if ADMIN_TOKEN is set)
+            admin_token = os.environ.get('ADMIN_TOKEN')
+            if admin_token:
+                provided = self.headers.get('X-Admin-Token') or self.headers.get('x-admin-token') or ''
+                if provided != admin_token:
+                    self.send_json_response({'error': 'Forbidden: admin token required'}, 403)
+                    return
             # Example: /api/matches/match_1/settle
             parts = path.split('/')
             match_id = parts[3] if len(parts) >= 5 else None
@@ -612,6 +619,13 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             })
 
         elif path == '/api/bets/settle':
+            # Admin protection (enabled only if ADMIN_TOKEN is set)
+            admin_token = os.environ.get('ADMIN_TOKEN')
+            if admin_token:
+                provided = self.headers.get('X-Admin-Token') or self.headers.get('x-admin-token') or ''
+                if provided != admin_token:
+                    self.send_json_response({'error': 'Forbidden: admin token required'}, 403)
+                    return
             bet_id = data.get('betId')
             result = str(data.get('result', '')).lower()
             if not bet_id or result not in ('won', 'lost'):
@@ -666,22 +680,35 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_json_response({'error': 'Endpoint not found'}, 404)
     
+    def _get_cors_origin(self):
+        """Determine allowed CORS origin based on request Origin and env."""
+        origin = self.headers.get('Origin', '')
+        allowed = os.environ.get('ALLOWED_ORIGINS', 'https://scoreleague.netlify.app,https://scoreleague.onrender.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000').split(',')
+        allowed = [o.strip() for o in allowed if o.strip()]
+        if origin and origin in allowed:
+            return origin
+        return allowed[0] if allowed else '*'
+
     def send_json_response(self, data, status_code=200):
         """Send JSON response"""
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        cors_origin = self._get_cors_origin()
+        self.send_header('Access-Control-Allow-Origin', cors_origin)
+        self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode('utf-8'))
     
     def do_OPTIONS(self):
         """Handle CORS preflight requests"""
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
+        cors_origin = self._get_cors_origin()
+        self.send_header('Access-Control-Allow-Origin', cors_origin)
+        self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token')
         self.end_headers()
 
 if __name__ == '__main__':

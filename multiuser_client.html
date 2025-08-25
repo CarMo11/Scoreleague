@@ -8372,6 +8372,13 @@
             try { return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_'); } catch (_) { return String(id || 'id'); }
         }
         
+        // Build headers including admin token when available
+        function buildAdminHeaders() {
+            const h = { 'Content-Type': 'application/json' };
+            try { if (window.ADMIN_TOKEN) h['X-Admin-Token'] = window.ADMIN_TOKEN; } catch (_) {}
+            return h;
+        }
+        
         // Call backend to settle all bets for a match by final score
         async function adminSettleForCard(rawMatchId) {
             try {
@@ -8392,7 +8399,7 @@
                 if (btn) { btn.disabled = true; btn.textContent = 'Settling...'; }
                 const res = await fetch(`${API_BASE}/api/matches/${encodeURIComponent(rawMatchId)}/settle`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: buildAdminHeaders(),
                     body: JSON.stringify({ homeGoals, awayGoals })
                 });
                 if (!res.ok) {
@@ -8859,6 +8866,34 @@
                     window.IS_ADMIN = (savedAdmin === '1');
                 }
             } catch (_) { window.IS_ADMIN = false; }
+            // Admin token handling: load from storage or prompt once in admin mode
+            try {
+                const savedToken = localStorage.getItem('admin_token');
+                if (savedToken) { window.ADMIN_TOKEN = savedToken; }
+                if (window.IS_ADMIN && !window.ADMIN_TOKEN) {
+                    const t = prompt('Admin token required to settle matches. Enter admin token:');
+                    if (t && t.trim()) {
+                        window.ADMIN_TOKEN = t.trim();
+                        try { localStorage.setItem('admin_token', window.ADMIN_TOKEN); } catch (_) {}
+                    }
+                }
+                // Expose helpers to manage token manually
+                window.setAdminToken = function(token) {
+                    window.ADMIN_TOKEN = token || '';
+                    try { if (token) localStorage.setItem('admin_token', token); else localStorage.removeItem('admin_token'); } catch (_) {}
+                    return true;
+                };
+                window.promptAdminToken = function() {
+                    const t2 = prompt('Enter admin token');
+                    if (t2 && t2.trim()) return window.setAdminToken(t2.trim());
+                    return false;
+                };
+                window.clearAdminToken = function() {
+                    window.ADMIN_TOKEN = '';
+                    try { localStorage.removeItem('admin_token'); } catch (_) {}
+                    return true;
+                };
+            } catch (_) { /* ignore token errors */ }
             const apiBaseParam = usp.get('api_base') || usp.get('api');
             if (apiBaseParam) {
                 window.API_BASE = apiBaseParam;
