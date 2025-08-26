@@ -5,7 +5,7 @@ import json
 import os
 import threading
 import time
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 from datetime import datetime
 import uuid
 
@@ -282,6 +282,25 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 'success': True,
                 'matches': game_server.game_data['matches']
             })
+        
+        elif path.startswith('/api/matches/'):
+            # Return a single match by ID
+            parts = path.split('/')
+            match_id_raw = parts[-1] if len(parts) >= 4 else None
+            match_id = unquote(match_id_raw) if match_id_raw else None
+            found = None
+            if match_id:
+                for m in game_server.game_data['matches']:
+                    try:
+                        if m and str(m.get('id')) == str(match_id):
+                            found = m
+                            break
+                    except Exception:
+                        continue
+            if found:
+                self.send_json_response({ 'success': True, 'match': found })
+            else:
+                self.send_json_response({ 'error': 'Match not found' }, 404)
         
         elif path.startswith('/api/leagues/user/'):
             user_id = path.split('/')[-1]

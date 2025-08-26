@@ -29,6 +29,7 @@
     <!-- Public API base (injected during Netlify build) -->
     <script src="env.js"></script>
     <script src="odds-api-service.js"></script>
+    <script src="scores-service.js"></script>
     
     <!-- Cache busting meta tags -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -3502,6 +3503,14 @@
             <div class="matches-header">
                 <h2 id="matches-title">⚽ Loading Matches...</h2>
                 <button id="refresh-matches" class="refresh-btn" onclick="loadRealMatches()" style="display: none;">🔄 Refresh</button>
+                <div id="admin-auto-controls" style="display:none; margin-top:8px;">
+                    <label style="display:flex; gap:6px; align-items:center; font-size:12px;">
+                        <input type="checkbox" id="toggle-auto-fill"> Auto-fill scores
+                    </label>
+                    <label style="display:flex; gap:6px; align-items:center; font-size:12px;">
+                        <input type="checkbox" id="toggle-auto-settle"> Auto-settle finished
+                    </label>
+                </div>
             </div>
             <div id="matches-container">
                 <!-- Matches will be populated here by JavaScript -->
@@ -4726,9 +4735,26 @@
         function renderLiveMatches(matches) {
             const matchesContainer = document.getElementById('matches-container');
             if (!matchesContainer) return;
-            
-            const matchesHTML = matches.map(match => `
-                <div class="match-card">
+            try { console.log('[renderLiveMatches] IS_ADMIN=', !!window.IS_ADMIN); } catch (_) {}
+            const __gate = beginRender('live');
+            if (!__gate.allowed) return;
+            const __savedAdminInputs = mergeAdminSavedInputs(captureAdminInputs());
+            const __activeAdminElId = captureActiveAdminElement();
+            const matchesHTML = matches.map(match => {
+                const sid = safeId(match.id);
+                const adminUI = window.IS_ADMIN ? `
+                    <div class="admin-settle" style="margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;">
+                        <div style="font-weight:600; font-size:12px; margin-bottom:6px;">Admin: Final Score & Settle</div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input id="settle-home-${sid}" type="number" min="0" placeholder="${match.homeTeam} goals" style="width:60px; padding:4px;" />
+                            <span>:</span>
+                            <input id="settle-away-${sid}" type="number" min="0" placeholder="${match.awayTeam} goals" style="width:60px; padding:4px;" />
+                            <button id="settle-btn-${sid}" class="odds-button" style="padding:6px 10px;" onclick="adminSettleForCard('${match.id}')">Settle</button>
+                        </div>
+                    </div>
+                ` : '';
+                return `
+                <div class="match-card real-match" data-match-id="${match.id}" data-status="live" data-home-team="${match.homeTeam}" data-away-team="${match.awayTeam}">
                     <div class="match-header">
                         <span class="match-league">${match.league}</span>
                         <span class="match-time">${match.kickoff}</span>
@@ -4768,13 +4794,19 @@
                             </div>
                         </div>
                     </div>
+                    ${adminUI}
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             matchesContainer.innerHTML = `
                 <h3>🔴 Live Matches (${matches.length} available)</h3>
                 ${matchesHTML}
             `;
+            window._lastRender = { source: 'live', data: (Array.isArray(matches) ? matches.slice() : matches) };
+            restoreAdminInputs(__savedAdminInputs);
+            restoreActiveAdminElement(__activeAdminElId);
+            try { scheduleAutoFillScan(); } catch (_) {}
         }
         
         // =============================================================================
@@ -8372,6 +8404,133 @@
             try { return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_'); } catch (_) { return String(id || 'id'); }
         }
         
+        // Preserve admin input values across re-renders
+        function captureAdminInputs() {
+            const map = {};
+            try {
+                const nodes = document.querySelectorAll('input[id^="settle-home-"], input[id^="settle-away-"]');
+                nodes.forEach(inp => {
+                    const m = (inp.id || '').match(/^settle-(home|away)-(.+)$/);
+                    if (!m) return;
+                    const side = m[1];
+                    const sid = m[2];
+                    if (!map[sid]) map[sid] = {};
+                    map[sid][side] = inp.value;
+                });
+            } catch (_) {}
+            return map;
+        }
+        
+        function restoreAdminInputs(saved) {
+            try {
+                Object.keys(saved || {}).forEach(sid => {
+                    const v = saved[sid] || {};
+                    if (Object.prototype.hasOwnProperty.call(v, 'home')) {
+                        const elH = document.getElementById(`settle-home-${sid}`);
+                        if (elH && (elH.value === '' || elH.value === null)) elH.value = v.home;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(v, 'away')) {
+                        const elA = document.getElementById(`settle-away-${sid}`);
+                        if (elA && (elA.value === '' || elA.value === null)) elA.value = v.away;
+                    }
+                });
+            } catch (_) {}
+        }
+        
+        function captureActiveAdminElement() {
+            try {
+                const ae = document.activeElement;
+                if (ae && typeof ae.id === 'string' && /^settle-(home|away)-/.test(ae.id)) return ae.id;
+            } catch (_) {}
+            return null;
+        }
+        
+        function restoreActiveAdminElement(id) {
+            if (!id) return;
+            try {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.focus();
+                    try { if (typeof el.setSelectionRange === 'function') el.setSelectionRange(el.value.length, el.value.length); } catch (_) {}
+                }
+            } catch (_) {}
+        }
+        
+        // Persist admin inputs in localStorage and merge with captured values
+        function getPersistedAdminInputs() {
+            try {
+                const raw = localStorage.getItem('admin_inputs');
+                const obj = JSON.parse(raw || '{}');
+                return obj && typeof obj === 'object' ? obj : {};
+            } catch (_) {
+                return {};
+            }
+        }
+        function persistAdminInput(sid, side, value) {
+            try {
+                const map = getPersistedAdminInputs();
+                if (!map[sid]) map[sid] = {};
+                map[sid][side] = String(value ?? '');
+                localStorage.setItem('admin_inputs', JSON.stringify(map));
+            } catch (_) { /* ignore */ }
+        }
+        function mergeAdminSavedInputs(captured) {
+            try {
+                const persisted = getPersistedAdminInputs();
+                const out = {};
+                // start with persisted
+                Object.keys(persisted || {}).forEach(sid => {
+                    out[sid] = Object.assign({}, persisted[sid]);
+                });
+                // overlay captured (non-empty only)
+                Object.keys(captured || {}).forEach(sid => {
+                    const v = captured[sid] || {};
+                    if (!out[sid]) out[sid] = {};
+                    ['home','away'].forEach(side => {
+                        if (Object.prototype.hasOwnProperty.call(v, side)) {
+                            const val = v[side];
+                            if (val !== '' && val !== null && typeof val !== 'undefined') {
+                                out[sid][side] = val;
+                            }
+                        }
+                    });
+                });
+                return out;
+            } catch (_) {
+                return captured || {};
+            }
+        }
+        
+        // Clear persisted inputs for a specific match id
+        function clearPersistedAdminInputsFor(sid) {
+            try {
+                const map = getPersistedAdminInputs();
+                if (map && Object.prototype.hasOwnProperty.call(map, sid)) {
+                    delete map[sid];
+                    localStorage.setItem('admin_inputs', JSON.stringify(map));
+                }
+            } catch (_) { /* ignore */ }
+        }
+        
+        // Prevent lower-priority renders from overwriting higher-priority views
+        function beginRender(source) {
+            try {
+                const priorities = { fallback: 0, live: 1, node: 2, real: 3 };
+                const pr = (Object.prototype.hasOwnProperty.call(priorities, source)) ? priorities[source] : 0;
+                window._renderState = window._renderState || { priority: -1, seq: 0, last: null };
+                const seq = ++window._renderState.seq;
+                if (pr < window._renderState.priority) {
+                    try { console.log(`[render:${source}] skipped (priority ${pr} < current ${window._renderState.priority})`); } catch (_) {}
+                    return { allowed: false, pr, seq };
+                }
+                window._renderState.priority = pr;
+                window._renderState.last = source;
+                return { allowed: true, pr, seq };
+            } catch (_) {
+                return { allowed: true, pr: 0, seq: 0 };
+            }
+        }
+        
         // Build headers including admin token when available
         function buildAdminHeaders() {
             const h = { 'Content-Type': 'application/json' };
@@ -8409,6 +8568,8 @@
                 const data = await res.json();
                 const r = data?.results || {};
                 alert(`✅ Match settled. Settled: ${data?.settled || 0}, Won: ${data?.won || 0}\nResults: 1X2=${r.match_result || '?'}, DC=${(r.double_chance || []).join(',')}, O/U=${r.total_goals || '?'}, BTTS=${r.btts || '?'}`);
+                // Clear persisted admin inputs for this match after successful settlement
+                try { clearPersistedAdminInputsFor(sid); } catch (_) {}
                 
                 // Refresh coins for current user by re-login (Python backend updates coins but has no sockets)
                 try {
@@ -8448,10 +8609,16 @@
         // Load real matches from API
         async function loadRealMatches() {
             console.log('🔄 Loading real match data from API...');
+            if (window._loadRealMatchesBusy) { try { console.log('[loadRealMatches] skipped: in-progress'); } catch (_) {} return; }
+            window._loadRealMatchesBusy = true;
             
             // Update UI to show loading state
             document.getElementById('matches-title').textContent = '⚽ Loading Real Matches...';
-            document.getElementById('matches-container').innerHTML = '<div class="loading-matches"><p>📡 Fetching live match data from 2. Bundesliga and other leagues...</p></div>';
+            // Do not wipe existing content during refresh to avoid flicker/removing admin UI
+            const _mc = document.getElementById('matches-container');
+            if (_mc && _mc.children.length === 0) {
+                _mc.innerHTML = '<div class="loading-matches"><p>📡 Fetching live match data from 2. Bundesliga and other leagues...</p></div>';
+            }
             
             try {
                 // Use the Odds API service to get real matches
@@ -8474,6 +8641,7 @@
                 console.error('❌ Error loading real matches:', error);
                 renderFallbackMatches();
             }
+            window._loadRealMatchesBusy = false;
         }
         
         // Render real matches from API
@@ -8481,6 +8649,11 @@
             const container = document.getElementById('matches-container');
             const title = document.getElementById('matches-title');
             const refreshBtn = document.getElementById('refresh-matches');
+            try { console.log('[renderRealMatches] IS_ADMIN=', !!window.IS_ADMIN); } catch (_) {}
+            const __gate = beginRender('real');
+            if (!__gate.allowed) return;
+            const __savedAdminInputs = mergeAdminSavedInputs(captureAdminInputs());
+            const __activeAdminElId = captureActiveAdminElement();
             
             // Update title and show refresh button
             title.textContent = `⚽ Live Matches (${matches.length} available)`;
@@ -8511,6 +8684,10 @@
             });
             
             container.innerHTML = html;
+            window._lastRender = { source: 'real', data: (Array.isArray(matches) ? matches.slice() : matches) };
+            restoreAdminInputs(__savedAdminInputs);
+            restoreActiveAdminElement(__activeAdminElId);
+            try { scheduleAutoFillScan(); } catch (_) {}
         }
         
         // Render individual match card
@@ -8531,7 +8708,7 @@
             ` : '';
             
             return `
-                <div class="match-card real-match" data-match-id="${match.id}">
+                <div class="match-card real-match" data-match-id="${match.id}" data-status="${match.status}" data-home-team="${match.homeTeam}" data-away-team="${match.awayTeam}">
                     <div class="match-header">
                         <div class="teams-display">
                             <div class="team">
@@ -8592,6 +8769,10 @@
         function renderFallbackMatches() {
             const container = document.getElementById('matches-container');
             const title = document.getElementById('matches-title');
+            const __gate = beginRender('fallback');
+            if (!__gate.allowed) return;
+            const __savedAdminInputs = mergeAdminSavedInputs(captureAdminInputs());
+            const __activeAdminElId = captureActiveAdminElement();
             
             // Update title to show matches are loaded
             title.textContent = '⚽ Heute\'s Spiele';
@@ -8702,17 +8883,6 @@
                             ${leagueGroup.leagueIcon} ${leagueGroup.league}
                         </h3>
                     </div>
-                `;
-                
-                // Add matches for this league
-                leagueGroup.matches.forEach(match => {
-                    const matchId = `${match.home.replace(/\s+/g, '')}-${match.away.replace(/\s+/g, '')}`.toLowerCase();
-                    
-                    html += `
-                        <div class="match-card">
-                            <div class="match-header">
-                                <div class="teams-display">
-                                    <div class="team">
                                         <span class="team-name">${match.home}</span>
                                     </div>
                                     <div class="vs-divider">VS</div>
@@ -8766,12 +8936,25 @@
                                     </button>
                                 </div>
                             </div>
+                            ${window.IS_ADMIN ? `
+                            <div class="admin-settle" style="margin-top:8px; padding-top:8px; border-top:1px dashed #ccc; opacity:0.7;">
+                                <div style="font-weight:600; font-size:12px; margin-bottom:6px;">Admin: Final Score & Settle (Demo data)</div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <input id="settle-home-${safeId(matchId)}" type="number" min="0" placeholder="${match.home} goals" style="width:60px; padding:4px;" disabled />
+                                    <span>:</span>
+                                    <input id="settle-away-${safeId(matchId)}" type="number" min="0" placeholder="${match.away} goals" style="width:60px; padding:4px;" disabled />
+                                    <button id="settle-btn-${safeId(matchId)}" class="odds-button" style="padding:6px 10px;" disabled title="Settlement disabled for demo matches">Settle</button>
+                                </div>
+                            </div>` : ''}
                         </div>
                     `;
                 });
             });
             
             container.innerHTML = html;
+            window._lastRender = { source: 'fallback', data: null };
+            restoreAdminInputs(__savedAdminInputs);
+            restoreActiveAdminElement(__activeAdminElId);
         }
         
         // Auto-load real matches on page load
@@ -8792,8 +8975,146 @@
             loadRealMatches();
             // Background refresh every 60 seconds
             setInterval(loadRealMatches, 60000);
+            
+            // Persist admin score inputs and auto-recover admin UI if removed by other updates
+            try {
+                const mc = document.getElementById('matches-container');
+                if (mc) {
+                    // Delegate input persistence
+                    mc.addEventListener('input', function(e) {
+                        const t = e.target;
+                        if (!t || !t.id) return;
+                        const m = String(t.id).match(/^settle-(home|away)-(.+)$/);
+                        if (!m) return;
+                        persistAdminInput(m[2], m[1], t.value);
+                    });
+                    
+                    // Observe DOM to ensure admin UI presence for admins
+                    let moTimer = null;
+                    const obs = new MutationObserver(function() {
+                        if (!window.IS_ADMIN) return;
+                        if (moTimer) clearTimeout(moTimer);
+                        moTimer = setTimeout(function() {
+                            const hasMatch = mc.querySelector('.match-card');
+                            const hasAdmin = mc.querySelector('.admin-settle');
+                            if (hasMatch && !hasAdmin) {
+                                const last = window._lastRender || {};
+                                try {
+                                    if (last.source === 'real' && Array.isArray(last.data)) renderRealMatches(last.data);
+                                    else if (last.source === 'live' && Array.isArray(last.data)) renderLiveMatches(last.data);
+                                    else if (last.source === 'node' && Array.isArray(last.data)) renderMatches(last.data);
+                                    else if (last.source === 'fallback') renderFallbackMatches();
+                                } catch (e) { try { console.warn('Admin UI recovery failed', e); } catch (_) {} }
+                            } else {
+                                try { restoreAdminInputs(getPersistedAdminInputs()); } catch (_) {}
+                            }
+                        }, 50);
+                    });
+                    obs.observe(mc, { childList: true, subtree: true });
+                    window._adminUIMutationObserver = obs;
+                }
+            } catch (_) { /* non-fatal */ }
         });
         
+        // =============================
+        // Admin Auto-Fill Score Helpers
+        // =============================
+        window._autoFillInFlight = window._autoFillInFlight || new Set();
+        window._autoFilledMatchIds = window._autoFilledMatchIds || new Set();
+        window._autoSettledMatchIds = window._autoSettledMatchIds || new Set();
+        window.AUTO_FILL_SCORES = (function(){ try { return localStorage.getItem('admin_auto_fill') === '1'; } catch(_) { return false; } })();
+        window.AUTO_SETTLE = (function(){ try { return localStorage.getItem('admin_auto_settle') === '1'; } catch(_) { return false; } })();
+
+        function setupAdminAutoControls() {
+            const panel = document.getElementById('admin-auto-controls');
+            if (!panel) return;
+            if (!window.IS_ADMIN) { panel.style.display = 'none'; return; }
+            panel.style.display = 'block';
+            const cbFill = document.getElementById('toggle-auto-fill');
+            const cbSettle = document.getElementById('toggle-auto-settle');
+            if (cbFill) {
+                cbFill.checked = !!window.AUTO_FILL_SCORES;
+                cbFill.addEventListener('change', function() {
+                    window.AUTO_FILL_SCORES = !!cbFill.checked;
+                    try { localStorage.setItem('admin_auto_fill', cbFill.checked ? '1' : '0'); } catch(_) {}
+                    if (window.AUTO_FILL_SCORES) {
+                        if (!window._autoFillInterval) window._autoFillInterval = setInterval(scanAutoFillForFinished, 15000);
+                        scheduleAutoFillScan();
+                    } else {
+                        if (window._autoFillInterval) { clearInterval(window._autoFillInterval); window._autoFillInterval = null; }
+                    }
+                });
+            }
+            if (cbSettle) {
+                cbSettle.checked = !!window.AUTO_SETTLE;
+                cbSettle.addEventListener('change', function() {
+                    window.AUTO_SETTLE = !!cbSettle.checked;
+                    try { localStorage.setItem('admin_auto_settle', cbSettle.checked ? '1' : '0'); } catch(_) {}
+                });
+            }
+            if (window.AUTO_FILL_SCORES && !window._autoFillInterval) {
+                window._autoFillInterval = setInterval(scanAutoFillForFinished, 15000);
+                scheduleAutoFillScan();
+            }
+        }
+
+        function scheduleAutoFillScan() {
+            if (!window.IS_ADMIN || !window.AUTO_FILL_SCORES) return;
+            if (window._scanAutoFillTimer) clearTimeout(window._scanAutoFillTimer);
+            window._scanAutoFillTimer = setTimeout(scanAutoFillForFinished, 60);
+        }
+
+        async function scanAutoFillForFinished() {
+            try {
+                if (!window.IS_ADMIN || !window.AUTO_FILL_SCORES) return;
+                if (typeof window.scoreService === 'undefined' || typeof window.scoreService.getFinalScore !== 'function') return;
+                const cards = document.querySelectorAll('.match-card.real-match[data-status]');
+                for (const card of cards) {
+                    const status = String(card.getAttribute('data-status') || '').toLowerCase();
+                    if (status !== 'finished') continue;
+                    const mid = card.getAttribute('data-match-id') || '';
+                    const homeTeam = card.getAttribute('data-home-team') || '';
+                    const awayTeam = card.getAttribute('data-away-team') || '';
+                    if (!mid) continue;
+                    if (window._autoSettledMatchIds && window._autoSettledMatchIds.has(mid)) continue;
+                    if (window._autoFillInFlight.has(mid)) continue;
+                    const sid = safeId(mid);
+                    const homeEl = document.getElementById(`settle-home-${sid}`);
+                    const awayEl = document.getElementById(`settle-away-${sid}`);
+                    if (!homeEl || !awayEl || homeEl.disabled || awayEl.disabled) continue;
+                    const ae = document.activeElement;
+                    if (ae && (ae === homeEl || ae === awayEl)) continue;
+                    const hasValues = (homeEl.value !== '' && awayEl.value !== '');
+                    if (hasValues) continue;
+                    window._autoFillInFlight.add(mid);
+                    try {
+                        const res = await window.scoreService.getFinalScore(mid, homeTeam, awayTeam);
+                        if (res && Number.isFinite(Number(res.home)) && Number.isFinite(Number(res.away))) {
+                            if (!homeEl.value) { homeEl.value = Number(res.home); try { persistAdminInput(sid, 'home', homeEl.value); } catch(_) {} }
+                            if (!awayEl.value) { awayEl.value = Number(res.away); try { persistAdminInput(sid, 'away', awayEl.value); } catch(_) {} }
+                            try {
+                                homeEl.style.backgroundColor = '#e8f7ef';
+                                awayEl.style.backgroundColor = '#e8f7ef';
+                                setTimeout(()=>{ homeEl.style.backgroundColor=''; awayEl.style.backgroundColor=''; }, 1500);
+                            } catch(_) {}
+                            if (window.AUTO_SETTLE && window.ADMIN_TOKEN) {
+                                if (!window._autoSettledMatchIds.has(mid)) {
+                                    window._autoSettledMatchIds.add(mid);
+                                    setTimeout(()=>{ try { adminSettleForCard(mid); } catch(_) { window._autoSettledMatchIds.delete(mid); } }, 250);
+                                }
+                            }
+                        }
+                    } catch(_) {
+                        // ignore
+                    } finally {
+                        window._autoFillInFlight.delete(mid);
+                    }
+                }
+            } catch (e) {
+                try { console.warn('[auto-fill] scan error', e); } catch(_) {}
+            }
+        }
+
         console.log('⚽ Real Match Data Integration v1.0.0 initialized!');
         console.log('🏈 Prioritizing 2. Bundesliga and Championship for immediate testing');
     </script>
@@ -8908,6 +9229,100 @@
             console.warn('API base param parse failed', e);
         }
         const API_BASE = window.API_BASE || window.location.origin;
+
+        // Backend-backed final score provider hook for auto-fill
+        // Uses a short-lived cache to avoid repeated network calls during scans
+        (function(){
+            if (typeof window.getFinalScoreHook === 'function') return; // don't override if app provided one
+            let _cacheTs = 0;
+            let _cache = null; // { [matchId]: { home, away } }
+            const TTL_MS = 10000; // 10s
+            // Per-ID small cache for the single-match endpoint
+            const ID_TTL_MS = 7000; // 7s
+            const _idCache = Object.create(null); // { [matchId]: { ts, val: {home, away} } }
+
+            function _getIdCache(id) {
+                const e = _idCache[String(id)];
+                if (!e) return null;
+                if ((Date.now() - e.ts) > ID_TTL_MS) return null;
+                return e.val;
+            }
+            function _setIdCache(id, val) {
+                _idCache[String(id)] = { ts: Date.now(), val };
+            }
+            async function fetchScoresOnce() {
+                const now = Date.now();
+                if (_cache && (now - _cacheTs) < TTL_MS) return _cache;
+                try {
+                    // Respect online/offline mode when available
+                    if (typeof isOnlineMode !== 'undefined' && !isOnlineMode) return null;
+                    const ctrl = new AbortController();
+                    const to = setTimeout(() => ctrl.abort(), 2500);
+                    const res = await fetch(`${API_BASE}/api/matches`, { signal: ctrl.signal });
+                    clearTimeout(to);
+                    if (!res || !res.ok) return null;
+                    const data = await res.json();
+                    const arr = (data && Array.isArray(data.matches)) ? data.matches : (Array.isArray(data) ? data : []);
+                    const map = {};
+                    for (const m of arr) {
+                        try {
+                            if (!m || !m.id) continue;
+                            const st = String(m.status || '').toLowerCase();
+                            const sc = m.score || {};
+                            if (st === 'finished' && Number.isFinite(Number(sc.home)) && Number.isFinite(Number(sc.away))) {
+                                map[String(m.id)] = { home: Number(sc.home), away: Number(sc.away) };
+                            }
+                        } catch (_) { /* ignore per-item */ }
+                    }
+                    _cache = map;
+                    _cacheTs = now;
+                    return _cache;
+                } catch (_) {
+                    return null;
+                }
+            }
+
+            async function fetchSingleScore(matchId) {
+                try {
+                    // Respect online/offline mode when available
+                    if (typeof isOnlineMode !== 'undefined' && !isOnlineMode) return null;
+                    const cached = _getIdCache(matchId);
+                    if (cached) return cached;
+                    const ctrl = new AbortController();
+                    const to = setTimeout(() => ctrl.abort(), 1500);
+                    const url = `${API_BASE}/api/matches/${encodeURIComponent(String(matchId))}`;
+                    const res = await fetch(url, { signal: ctrl.signal });
+                    clearTimeout(to);
+                    if (!res || !res.ok) return null;
+                    const data = await res.json();
+                    const m = data && (data.match || data);
+                    if (!m || !m.id) return null;
+                    const st = String(m.status || '').toLowerCase();
+                    const sc = m.score || {};
+                    if (st === 'finished' && Number.isFinite(Number(sc.home)) && Number.isFinite(Number(sc.away))) {
+                        const val = { home: Number(sc.home), away: Number(sc.away) };
+                        _setIdCache(matchId, val);
+                        return val;
+                    }
+                    return null;
+                } catch(_) { return null; }
+            }
+
+            window.getFinalScoreHook = async function({ matchId }){
+                try {
+                    if (!matchId) return null;
+                    // 1) Try single-match endpoint first (fast, low payload)
+                    const single = await fetchSingleScore(matchId);
+                    if (single) return single;
+                    // 2) Fallback to batch cache
+                    const map = await fetchScoresOnce();
+                    if (map && Object.prototype.hasOwnProperty.call(map, String(matchId))) return map[String(matchId)];
+                    return null;
+                } catch (_) {
+                    return null;
+                }
+            };
+        })();
 
         // Global coin display updater core (declared early so all code can safely call it)
         window._updateCoinDisplayCore = function () {
@@ -9451,6 +9866,10 @@
         function renderMatches(matches) {
             const container = document.getElementById('matches-container');
             if (!container) return;
+            const __gate = beginRender('node');
+            if (!__gate.allowed) return;
+            const __savedAdminInputs = mergeAdminSavedInputs(captureAdminInputs());
+            const __activeAdminElId = captureActiveAdminElement();
             // Build a quick index for match metadata so other views (like Open Bets) can resolve team names
             try {
                 const idx = {};
@@ -9461,7 +9880,7 @@
             } catch (_) { /* non-fatal */ }
 
             container.innerHTML = matches.map(match => `
-                <div class="match-card">
+                <div class="match-card real-match" data-match-id="${match.id}" data-status="${match.status || ''}" data-home-team="${match.homeTeam}" data-away-team="${match.awayTeam}">
                     <div class="match-header">
                         <div class="match-time">${match.date}</div>
                         <div class="league-badge">${match.league}</div>
@@ -9517,6 +9936,10 @@
                     </div>` : ''}
                 </div>
             `).join('');
+            window._lastRender = { source: 'node', data: (Array.isArray(matches) ? matches.slice() : matches) };
+            restoreAdminInputs(__savedAdminInputs);
+            restoreActiveAdminElement(__activeAdminElId);
+            try { scheduleAutoFillScan(); } catch (_) {}
         }
 
         // Save a single bet slip to Supabase (schema-aligned)
@@ -10364,6 +10787,7 @@
         // Initialize app on page load
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 ScoreLeague Multi-User Professional Version Loading...');
+            try { setupAdminAutoControls(); } catch(_) {}
             checkExistingSession();
             // Initialize online/offline awareness early
             try {

@@ -1,6 +1,5 @@
-const CACHE_NAME = 'scoreleague-v1.0.1';
+const CACHE_NAME = 'scoreleague-v1.0.2';
 const urlsToCache = [
-  '/multiuser_client.html',
   '/styles.css',
   '/auth-styles.css',
   '/enhanced-betting-styles.css',
@@ -27,41 +26,51 @@ self.addEventListener('fetch', event => {
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
-  
+
+  // For navigations/HTML documents, use Network-First to avoid stale shells
+  const isDocument = event.request.mode === 'navigate' || event.request.destination === 'document';
+  if (isDocument) {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          // Cache successful responses for offline fallback
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Fall back to cached version (if any), or a basic offline shell
+          return caches.match(event.request).then(cached => cached || caches.match('/multiuser_client.html'));
+        })
+    );
+    return;
+  }
+
+  // For other assets (CSS/JS/Images), use Cache-First
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version if available
-        if (response) {
-          console.log('ScoreLeague: Serving from cache:', event.request.url);
-          return response;
-        }
-        
-        // Try to fetch from network
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Cache successful responses
-            if (networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request, responseClone);
-              });
-            }
-            return networkResponse;
-          })
-          .catch(error => {
-            console.log('ScoreLeague: Network fetch failed:', error);
-            // If both cache and network fail, return offline page for documents
-            if (event.request.destination === 'document') {
-              return caches.match('/multiuser_client.html');
-            }
-            // For other resources, return a simple error response
-            return new Response('Offline - resource not available', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
+    caches.match(event.request).then(response => {
+      if (response) {
+        console.log('ScoreLeague: Serving from cache:', event.request.url);
+        return response;
+      }
+      return fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(error => {
+          console.log('ScoreLeague: Network fetch failed:', error);
+          return new Response('Offline - resource not available', {
+            status: 503,
+            statusText: 'Service Unavailable'
           });
-      })
+        });
+    })
   );
 });
 
