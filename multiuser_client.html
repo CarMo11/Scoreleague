@@ -9357,7 +9357,7 @@
             try {
                 const ctrl = new AbortController();
                 const to = setTimeout(() => ctrl.abort(), 2500);
-                const res = await fetch(`${API_BASE}/health`, { signal: ctrl.signal });
+                const res = await fetch(`${API_BASE}/api/health`, { signal: ctrl.signal });
                 clearTimeout(to);
                 isOnlineMode = !!res && res.ok;
                 console.log(`[health] ${API_BASE} => ${isOnlineMode ? 'online' : 'offline'}`);
