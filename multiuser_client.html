@@ -8875,75 +8875,66 @@
             // Build HTML
             let html = '';
             
-            matches.forEach(leagueGroup => {
-                // Add league header
+            matches.forEach((leagueGroup) => {
+                // League header
                 html += `
                     <div class="league-header" style="margin: 20px 0 10px; padding: 10px; background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 8px;">
                         <h3 style="color: white; margin: 0; font-size: 16px;">
                             ${leagueGroup.leagueIcon} ${leagueGroup.league}
                         </h3>
                     </div>
-                                        <span class="team-name">${match.home}</span>
+                `;
+                
+                (Array.isArray(leagueGroup.matches) ? leagueGroup.matches : []).forEach((match, idx) => {
+                    const matchId = safeId(`${leagueGroup.league}-${idx}-${match.home}-${match.away}`);
+                    html += `
+                        <div class="match-card" data-match-id="${matchId}" data-status="" data-home-team="${match.home}" data-away-team="${match.away}">
+                            <div class="match-header">
+                                <div class="match-time">⏰ ${match.time}</div>
+                                <div class="league-badge">${leagueGroup.league}</div>
+                            </div>
+                            <div class="teams">
+                                <div class="team">
+                                    <div class="team-name">${match.home}</div>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div class="team">
+                                    <div class="team-name">${match.away}</div>
+                                </div>
+                            </div>
+                            <div class="betting-markets">
+                                <div class="market">
+                                    <div class="market-title">Endergebnis</div>
+                                    <div class="market-odds">
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-1', '${match.home} vs ${match.away}', '${match.home}', ${match.homeOdds}, this, event)">1 (${match.homeOdds.toFixed(2)})</button>
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-x', '${match.home} vs ${match.away}', 'Unentschieden', ${match.drawOdds}, this, event)">X (${match.drawOdds.toFixed(2)})</button>
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-2', '${match.home} vs ${match.away}', '${match.away}', ${match.awayOdds}, this, event)">2 (${match.awayOdds.toFixed(2)})</button>
                                     </div>
-                                    <div class="vs-divider">VS</div>
-                                    <div class="team">
-                                        <span class="team-name">${match.away}</span>
+                                </div>
+                                <div class="market">
+                                    <div class="market-title">Doppelte Chance</div>
+                                    <div class="market-odds">
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-1x', '${match.home} vs ${match.away}', '${match.home} oder Unentschieden', ${(1/((1/match.homeOdds) + (1/match.drawOdds))).toFixed(2)}, this, event)">1X (${(1/((1/match.homeOdds) + (1/match.drawOdds))).toFixed(2)})</button>
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-12', '${match.home} vs ${match.away}', '${match.home} oder ${match.away}', ${(1/((1/match.homeOdds) + (1/match.awayOdds))).toFixed(2)}, this, event)">12 (${(1/((1/match.homeOdds) + (1/match.awayOdds))).toFixed(2)})</button>
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-x2', '${match.home} vs ${match.away}', 'Unentschieden oder ${match.away}', ${(1/((1/match.drawOdds) + (1/match.awayOdds))).toFixed(2)}, this, event)">X2 (${(1/((1/match.drawOdds) + (1/match.awayOdds))).toFixed(2)})</button>
                                     </div>
                                 </div>
-                                <div class="match-info">
-                                    <span class="match-time">⏰ ${match.time}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="market-section">
-                                <div class="market-title">Endergebnis</div>
-                                <div class="market-odds">
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-1', '${match.home} vs ${match.away}', '${match.home}', ${match.homeOdds}, this, event)">
-                                        1 (${match.homeOdds.toFixed(2)})
-                                    </button>
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-x', '${match.home} vs ${match.away}', 'Unentschieden', ${match.drawOdds}, this, event)">
-                                        X (${match.drawOdds.toFixed(2)})
-                                    </button>
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-2', '${match.home} vs ${match.away}', '${match.away}', ${match.awayOdds}, this, event)">
-                                        2 (${match.awayOdds.toFixed(2)})
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="market-section">
-                                <div class="market-title">Doppelte Chance</div>
-                                <div class="market-odds">
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-1x', '${match.home} vs ${match.away}', '${match.home} oder Unentschieden', ${(1/((1/match.homeOdds) + (1/match.drawOdds))).toFixed(2)}, this, event)">
-                                        1X (${(1/((1/match.homeOdds) + (1/match.drawOdds))).toFixed(2)})
-                                    </button>
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-12', '${match.home} vs ${match.away}', '${match.home} oder ${match.away}', ${(1/((1/match.homeOdds) + (1/match.awayOdds))).toFixed(2)}, this, event)">
-                                        12 (${(1/((1/match.homeOdds) + (1/match.awayOdds))).toFixed(2)})
-                                    </button>
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-x2', '${match.home} vs ${match.away}', 'Unentschieden oder ${match.away}', ${(1/((1/match.drawOdds) + (1/match.awayOdds))).toFixed(2)}, this, event)">
-                                        X2 (${(1/((1/match.drawOdds) + (1/match.awayOdds))).toFixed(2)})
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="market-section">
-                                <div class="market-title">Über/Unter 2.5 Tore</div>
-                                <div class="market-odds">
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-over', '${match.home} vs ${match.away}', 'Über 2.5', ${match.overOdds}, this, event)">
-                                        Über (${match.overOdds.toFixed(2)})
-                                    </button>
-                                    <button class="odds-button" onclick="toggleBet('${matchId}-under', '${match.home} vs ${match.away}', 'Unter 2.5', ${match.underOdds}, this, event)">
-                                        Unter (${match.underOdds.toFixed(2)})
-                                    </button>
+                                <div class="market">
+                                    <div class="market-title">Über/Unter 2.5 Tore</div>
+                                    <div class="market-odds">
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-over', '${match.home} vs ${match.away}', 'Über 2.5', ${match.overOdds}, this, event)">Über (${match.overOdds.toFixed(2)})</button>
+                                        <button class="odds-button" onclick="toggleBet('${matchId}-under', '${match.home} vs ${match.away}', 'Unter 2.5', ${match.underOdds}, this, event)">Unter (${match.underOdds.toFixed(2)})</button>
+                                    </div>
                                 </div>
                             </div>
                             ${window.IS_ADMIN ? `
                             <div class="admin-settle" style="margin-top:8px; padding-top:8px; border-top:1px dashed #ccc; opacity:0.7;">
                                 <div style="font-weight:600; font-size:12px; margin-bottom:6px;">Admin: Final Score & Settle (Demo data)</div>
                                 <div style="display:flex; align-items:center; gap:6px;">
-                                    <input id="settle-home-${safeId(matchId)}" type="number" min="0" placeholder="${match.home} goals" style="width:60px; padding:4px;" disabled />
+                                    <input id="settle-home-${matchId}" type="number" min="0" placeholder="${match.home} goals" style="width:60px; padding:4px;" disabled />
                                     <span>:</span>
-                                    <input id="settle-away-${safeId(matchId)}" type="number" min="0" placeholder="${match.away} goals" style="width:60px; padding:4px;" disabled />
-                                    <button id="settle-btn-${safeId(matchId)}" class="odds-button" style="padding:6px 10px;" disabled title="Settlement disabled for demo matches">Settle</button>
+                                    <input id="settle-away-${matchId}" type="number" min="0" placeholder="${match.away} goals" style="width:60px; padding:4px;" disabled />
+                                    <button id="settle-btn-${matchId}" class="odds-button" style="padding:6px 10px;" disabled title="Settlement disabled for demo matches">Settle</button>
                                 </div>
                             </div>` : ''}
                         </div>
