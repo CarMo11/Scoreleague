@@ -351,7 +351,12 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                     err_body = e.read().decode('utf-8')
                 except Exception:
                     err_body = ''
-                self.send_json_response({'error': 'Upstream error', 'status': e.code, 'body': err_body[:2000]}, 502)
+                # Gracefully degrade on common rate/authorization issues
+                if e.code in (401, 402, 429):
+                    # Return empty odds list so frontend can continue without errors
+                    self.send_json_response([])
+                else:
+                    self.send_json_response({'error': 'Upstream error', 'status': e.code, 'body': err_body[:2000]}, 502)
             except Exception as e:
                 self.send_json_response({'error': f'Proxy error: {type(e).__name__}'}, 502)
 
