@@ -305,6 +305,57 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self.send_json_response({ 'error': 'Match not found' }, 404)
         
+        # --- Secure server-side proxy for The Odds API ---
+        elif path == '/api/odds/sports':
+            odds_key = os.environ.get('ODDS_API_KEY')
+            if not odds_key:
+                self.send_json_response({'error': 'Odds API key not configured (set ODDS_API_KEY env var)'}, 501)
+                return
+            upstream = f"https://api.the-odds-api.com/v4/sports/?apiKey={odds_key}"
+            try:
+                req = urllib.request.Request(upstream, headers={'User-Agent': 'ScoreLeague/1.0'})
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    body = resp.read().decode('utf-8')
+                    data = json.loads(body)
+                    self.send_json_response(data)
+            except urllib.error.HTTPError as e:
+                self.send_json_response({'error': 'Upstream error', 'status': e.code}, 502)
+            except Exception as e:
+                self.send_json_response({'error': f'Proxy error: {type(e).__name__}'}, 502)
+        
+        elif path == '/api/odds':
+            odds_key = os.environ.get('ODDS_API_KEY')
+            if not odds_key:
+                self.send_json_response({'error': 'Odds API key not configured (set ODDS_API_KEY env var)'}, 501)
+                return
+            params = parse_qs(query)
+            sport = (params.get('sport') or params.get('sportKey') or [''])[0].strip()
+            if not sport:
+                self.send_json_response({'error': 'Missing sport query param'}, 400)
+                return
+            regions = (params.get('regions') or ['uk'])[0]
+            markets = (params.get('markets') or ['h2h,totals'])[0]
+            odds_format = (params.get('oddsFormat') or ['decimal'])[0]
+            upstream = (
+                f"https://api.the-odds-api.com/v4/sports/{quote(sport)}/odds/"
+                f"?regions={regions}&markets={markets}&oddsFormat={odds_format}&apiKey={odds_key}"
+            )
+            try:
+                req = urllib.request.Request(upstream, headers={'User-Agent': 'ScoreLeague/1.0'})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    body = resp.read().decode('utf-8')
+                    data = json.loads(body)
+                    self.send_json_response(data)
+            except urllib.error.HTTPError as e:
+                try:
+                    err_body = e.read().decode('utf-8')
+                except Exception:
+                    err_body = ''
+                self.send_json_response({'error': 'Upstream error', 'status': e.code, 'body': err_body[:2000]}, 502)
+            except Exception as e:
+                self.send_json_response({'error': f'Proxy error: {type(e).__name__}'}, 502)
+
+        
         elif path.startswith('/api/leagues/user/'):
             user_id = path.split('/')[-1]
             user_leagues = [league for league in game_server.game_data['leagues'].values() 
