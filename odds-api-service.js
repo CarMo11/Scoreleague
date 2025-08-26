@@ -12,6 +12,8 @@ class OddsAPIService {
         this.apiKey = storedKey || '083420a27f629c4c7e730cb10f70a125';
         // NOTE: the fallback key is subject to rate limits. Encourage testers to add their own.
         this.baseUrl = 'https://api.the-odds-api.com/v4';
+        // Prefer calling our server proxy to keep the real key private
+        this.apiBase = (typeof window !== 'undefined' && typeof window.API_BASE !== 'undefined') ? (window.API_BASE || '') : '';
         this.cache = new Map();
         this.cacheTimeout = 10 * 60 * 1000; // 10 minutes
     }
@@ -33,6 +35,19 @@ class OddsAPIService {
 
     // Get available sports (free endpoint)
     async getSports() {
+        const isFileProtocol = (typeof window !== 'undefined') && (window.location.protocol === 'file:');
+        // Prefer server proxy in non-local environments
+        if (!isFileProtocol) {
+            try {
+                const url = `${this.apiBase}/api/odds/sports`;
+                const response = await fetch(url);
+                if (response.ok) {
+                    return await response.json();
+                }
+                // If proxy not configured, fall through to direct only if client key is present
+            } catch (_) {}
+        }
+        // Fallback (may require client key)
         try {
             const response = await fetch(`${this.baseUrl}/sports/?apiKey=${this.apiKey}`);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -63,18 +78,33 @@ class OddsAPIService {
             }
         }
 
-        // Skip remote fetch in local dev to avoid CORS
-        if (isLocalEnv) {
-            console.warn('🛈 Local environment detected – using demo odds data');
-            return null;
+        // Prefer server proxy to keep key private (works on localhost when served by our Python server)
+        try {
+            const proxyUrl = `${this.apiBase}/api/odds?sport=${encodeURIComponent(sportKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
+            console.log('Fetching odds via proxy:', proxyUrl);
+            const response = await fetch(proxyUrl);
+            if (response.ok) {
+                const data = await response.json();
+                this.cache.set(cacheKey, { data, timestamp: Date.now() });
+                console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy`);
+                return data;
+            }
+            // If proxy is not configured (e.g., 501) or fails, try direct only if we have a client key
+        } catch (_) {
+            // ignore and try fallback
         }
 
-        
-
         try {
+            if (isFileProtocol) {
+                console.warn('🛈 File protocol detected – skipping direct network calls, returning demo null');
+                return null;
+            }
+            if (!this.apiKey) {
+                console.warn('No client API key set; skipping direct The Odds API request.');
+                return null;
+            }
             const url = `${this.baseUrl}/sports/${sportKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=${this.apiKey}`;
-            console.log('Fetching odds from:', url);
-            
+            console.log('Fetching odds directly from:', url);
             const response = await fetch(url);
             if (!response.ok) {
                 if (response.status === 401) {
@@ -82,16 +112,9 @@ class OddsAPIService {
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
             const data = await response.json();
-            
-            // Cache the result
-            this.cache.set(cacheKey, {
-                data: data,
-                timestamp: Date.now()
-            });
-            
-            console.log(`Fetched ${data.length} matches from The Odds API`);
+            this.cache.set(cacheKey, { data, timestamp: Date.now() });
+            console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches from The Odds API`);
             return data;
         } catch (error) {
             console.error('Error fetching odds:', error);

@@ -5,9 +5,11 @@ import json
 import os
 import threading
 import time
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import urlparse, parse_qs, unquote, quote
 from datetime import datetime
 import uuid
+import urllib.request
+import urllib.error
 
 class MultiUserGameServer:
     def __init__(self):
@@ -267,6 +269,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_api_get(self, parsed_path):
         """Handle API GET requests"""
         path = parsed_path.path
+        query = parsed_path.query or ''
         
         # Health checks for client online/offline detection
         if path == '/health' or path == '/api/health':
