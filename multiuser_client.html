@@ -4683,6 +4683,12 @@
                     { data: serieAOdds, name: 'Serie A' }
                 ];
                 
+                // Track leagues with no available odds so the UI can show a helpful note
+                const missingLeagues = allOdds
+                    .filter(l => !Array.isArray(l.data) || l.data.length === 0)
+                    .map(l => l.name);
+                try { window._emptyLeagues = missingLeagues; } catch (_) {}
+                
                 const matches = [];
                 
                 allOdds.forEach(league => {
@@ -4728,7 +4734,33 @@
                 console.log(`Loaded ${liveMatches.length} live matches with real odds`);
                 // Update the matches display with live data
                 renderLiveMatches(liveMatches);
+            } else {
+                // No live odds available for requested leagues – add a small non-intrusive banner
+                try { renderNoOddsMessage(); } catch (_) {}
             }
+        }
+        
+        // Render a small banner when there are no live odds for requested leagues
+        function renderNoOddsMessage() {
+            const container = document.getElementById('matches-container');
+            const title = document.getElementById('matches-title');
+            if (!container) return;
+            if (title && !title.textContent) {
+                title.textContent = '⚽ Live Matches';
+            }
+            // Avoid duplicates
+            const existing = document.getElementById('no-odds-banner');
+            if (existing) existing.remove();
+            const missing = Array.isArray(window._emptyLeagues) ? window._emptyLeagues.filter(Boolean) : [];
+            const msg = missing.length > 0
+                ? `No live odds available right now for: ${missing.join(', ')}.`
+                : 'No live odds available right now.';
+            const banner = document.createElement('div');
+            banner.id = 'no-odds-banner';
+            banner.setAttribute('role', 'status');
+            banner.style.cssText = 'margin:8px 0; padding:10px; border:1px dashed #3a4157; background:#131a28; color:#b8c7e0; border-radius:6px; font-size:13px;';
+            banner.textContent = `${msg} Showing demo or saved matches if available.`;
+            container.prepend(banner);
         }
         
         // Render live matches with real odds
@@ -8621,27 +8653,28 @@
             }
             
             try {
-                // Use the Odds API service to get real matches
-                if (typeof window.oddsAPIService !== 'undefined') {
+                if (typeof window.oddsAPIService !== 'undefined' && typeof window.oddsAPIService.getMultipleLeagues === 'function') {
                     const matches = await window.oddsAPIService.getMultipleLeagues();
-                    
-                    if (matches && matches.length > 0) {
-                        realMatches = matches;
+                    if (Array.isArray(matches) && matches.length > 0) {
                         renderRealMatches(matches);
-                        console.log(`✅ Loaded ${matches.length} real matches successfully!`);
+                        try { console.log(`✅ Loaded ${matches.length} real matches successfully!`); } catch (_) {}
                     } else {
-                        console.log('⚠️ No matches found, falling back to demo data');
+                        try { console.log('⚠️ No matches found, falling back to demo data'); } catch (_) {}
                         renderFallbackMatches();
+                        try { renderNoOddsMessage(); } catch (_) {}
                     }
                 } else {
-                    console.error('❌ Odds API service not available');
+                    try { console.error('❌ Odds API service not available'); } catch (_) {}
                     renderFallbackMatches();
+                    try { renderNoOddsMessage(); } catch (_) {}
                 }
             } catch (error) {
-                console.error('❌ Error loading real matches:', error);
+                try { console.error('❌ Error loading real matches:', error); } catch (_) {}
                 renderFallbackMatches();
+                try { renderNoOddsMessage(); } catch (_) {}
+            } finally {
+                window._loadRealMatchesBusy = false;
             }
-            window._loadRealMatchesBusy = false;
         }
         
         // Render real matches from API
@@ -8657,11 +8690,11 @@
             
             // Update title and show refresh button
             title.textContent = `⚽ Live Matches (${matches.length} available)`;
-            refreshBtn.style.display = 'inline-block';
+            if (refreshBtn) refreshBtn.style.display = 'inline-block';
             
             // Group matches by league
             const matchesByLeague = {};
-            matches.forEach(match => {
+            (Array.isArray(matches) ? matches : []).forEach(match => {
                 if (!matchesByLeague[match.league]) {
                     matchesByLeague[match.league] = [];
                 }
