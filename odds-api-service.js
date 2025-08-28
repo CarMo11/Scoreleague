@@ -20,6 +20,11 @@ class OddsAPIService {
 
     this.cache = new Map();                              // simple in-memory cache
     this.cacheTimeout = 10 * 60 * 1000;                  // 10 minutes
+    // cache sports list for lightweight key resolution
+    this.sportsList = null;
+    this.sportsListFetchedAt = 0;
+    this.sportsListTTL = 60 * 60 * 1000;                 // 1 hour
+    this.resolvedSportAliases = Object.create(null);
   }
 
   // Allow runtime update of the API key and persist to localStorage
@@ -66,9 +71,69 @@ class OddsAPIService {
     }
   }
 
+  // Cache and return the sports list to help resolve sport key aliases
+  async loadSportsList() {
+    try {
+      if (this.sportsList && (Date.now() - this.sportsListFetchedAt) < this.sportsListTTL) {
+        return this.sportsList;
+      }
+      const list = await this.getSports();
+      if (Array.isArray(list)) {
+        this.sportsList = list;
+        this.sportsListFetchedAt = Date.now();
+        return this.sportsList;
+      }
+    } catch (_) { /* ignore */ }
+    return [];
+  }
+
+  // Attempt to map an alias or unknown sport key to a valid one from the sports list
+  async normalizeSportKey(sportKey = '') {
+    const key = String(sportKey || '').trim();
+    if (!key) return key;
+    try {
+      if (this.resolvedSportAliases[key]) return this.resolvedSportAliases[key];
+
+      const sports = await this.loadSportsList();
+      if (Array.isArray(sports) && sports.length) {
+        if (sports.some(s => String(s.key) === key)) {
+          this.resolvedSportAliases[key] = key;
+          return key;
+        }
+
+        const lower = key.toLowerCase();
+        const looksLikeChampionship = lower.includes('champ');
+        let candidate = null;
+
+        if (looksLikeChampionship) {
+          const championshipCandidates = sports.filter(s => {
+            const k = String(s.key || '').toLowerCase();
+            const t = String(s.title || '').toLowerCase();
+            return k.startsWith('soccer_') && (k.includes('champ') || t.includes('champ'));
+          });
+          candidate = championshipCandidates.find(s => String(s.key).toLowerCase().includes('efl'))
+                   || championshipCandidates.find(s => String(s.key).toLowerCase().includes('england'))
+                   || championshipCandidates[0];
+        }
+
+        if (candidate && candidate.key) {
+          const resolved = String(candidate.key);
+          console.log(`OddsAPIService: mapped sport alias "${key}" -> "${resolved}"`);
+          this.resolvedSportAliases[key] = resolved;
+          return resolved;
+        }
+      }
+    } catch (_) { /* ignore */ }
+
+    // Default: return as-is
+    this.resolvedSportAliases[key] = key;
+    return key;
+  }
+
   // Get odds for a specific league; prefer proxy; fallback to direct only with a user key
   async getOdds(sportKey = 'soccer_epl', regions = 'uk', markets = 'h2h,totals') {
-    const cacheKey = `${sportKey}_${regions}_${markets}`;
+    const resolvedKey = await this.normalizeSportKey(sportKey);
+    const cacheKey = `${resolvedKey}_${regions}_${markets}`;
 
     // Serve from cache if fresh
     if (this.cache.has(cacheKey)) {
@@ -83,7 +148,7 @@ class OddsAPIService {
     if (this.apiBase) {
       try {
         const proxyUrl =
-          `${this.apiBase}/api/odds?sport=${encodeURIComponent(sportKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
+          `${this.apiBase}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
         console.log('Fetching odds via proxy:', proxyUrl);
         const response = await fetch(proxyUrl, { cache: 'no-store' });
         if (response.ok) {
@@ -104,9 +169,9 @@ class OddsAPIService {
 
     try {
       const url =
-        `${this.baseUrl}/sports/${sportKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=${this.apiKey}`;
+        `${this.baseUrl}/sports/${resolvedKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=${this.apiKey}`;
       const safeUrl =
-        `${this.baseUrl}/sports/${sportKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=***`;
+        `${this.baseUrl}/sports/${resolvedKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=***`;
       console.log('Fetching odds directly from:', safeUrl);
 
       const response = await fetch(url, { cache: 'no-store' });
@@ -184,7 +249,9 @@ class OddsAPIService {
       'soccer_france_ligue_two': 'Ligue 2',
       'soccer_uefa_champs_league': 'Champions League',
       'soccer_uefa_europa_league': 'Europa League',
-      'soccer_england_efl_champ': 'Championship'
+      'soccer_england_efl_champ': 'Championship',
+      'soccer_efl_championship': 'Championship',
+      'soccer_england_championship': 'Championship'
     };
     return leagueMap[sportKey] || 'Football League';
   }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scoreleague-v1.0.4';
+const CACHE_NAME = 'scoreleague-v1.0.5';
 const urlsToCache = [
   '/styles.css',
   '/auth-styles.css',

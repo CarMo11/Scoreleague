@@ -352,7 +352,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 except Exception:
                     err_body = ''
                 # Gracefully degrade on common rate/authorization issues
-                if e.code in (401, 402, 429):
+                if e.code in (400, 401, 402, 403, 404, 429, 500, 502, 503, 504):
                     # Return empty odds list so frontend can continue without errors
                     self.send_json_response([])
                 else:
