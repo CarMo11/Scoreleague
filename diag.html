@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ScoreLeague Diagnostics</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <!-- Ensure API_BASE is injected before any dependent script -->
+  <script src="/env.js"></script>
+  <style>
+    html, body { background:#0f1115; color:#e6e8eb; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .wrap { max-width: 980px; margin: 24px auto; padding: 16px; }
+    h1 { margin: 0 0 12px; font-size: 22px; }
+    h2 { margin: 18px 0 8px; font-size: 16px; color:#9bc7ff; }
+    code, pre { background:#151924; padding: 8px; border-radius: 6px; display:block; white-space:pre-wrap; word-break:break-word; }
+    .grid { display:grid; grid-template-columns: 240px 1fr; gap: 12px; align-items:start; }
+    .btns { display:flex; gap:8px; margin:12px 0; }
+    button { padding:8px 12px; border-radius:6px; border:1px solid #2a3142; background:#1a2233; color:#e6e8eb; cursor:pointer; }
+    button:hover { background:#223049; }
+    a { color:#8ecbff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>ScoreLeague Diagnostics</h1>
+    <div class="btns">
+      <button id="btn-refresh">Hard Refresh</button>
+      <button id="btn-unregister">Unregister Service Worker</button>
+      <button id="btn-clear">Clear Site Data (storage+caches)</button>
+    </div>
+
+    <h2>Environment</h2>
+    <div class="grid">
+      <div>Location</div><code id="loc"></code>
+      <div>User Agent</div><code id="ua"></code>
+      <div>navigator.onLine</div><code id="online"></code>
+      <div>Service Worker Controller</div><code id="swc"></code>
+      <div>API_BASE (window.API_BASE)</div><code id="apiBase"></code>
+    </div>
+
+    <h2>env.js (fresh fetch, no-store)</h2>
+    <pre id="envJs">(loading...)</pre>
+
+    <h2>Proxy Health</h2>
+    <div class="grid">
+      <div>GET API_BASE/api/health</div><pre id="health">(loading...)</pre>
+      <div>GET API_BASE/api/odds/sports</div><pre id="sports">(loading...)</pre>
+    </div>
+
+    <h2>Service Worker Registrations</h2>
+    <pre id="swRegs">(loading...)</pre>
+  </div>
+
+  <script>
+    function setEl(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try {
+        if (typeof val === 'string') el.textContent = val;
+        else el.textContent = JSON.stringify(val, null, 2);
+      } catch (e) {
+        el.textContent = String(val);
+      }
+    }
+
+    document.getElementById('btn-refresh').addEventListener('click', () => {
+      // Force a full reload bypassing SW caches
+      location.reload(true);
+    });
+
+    document.getElementById('btn-unregister').addEventListener('click', async () => {
+      if (!('serviceWorker' in navigator)) return alert('No serviceWorker in this browser');
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+      alert('Service worker(s) unregistered. Reloading...');
+      location.reload();
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', async () => {
+      try {
+        // Clear caches
+        if (window.caches) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        // Clear storage (local/session/indexedDB) best-effort
+        localStorage.clear();
+        sessionStorage.clear();
+        if (window.indexedDB && indexedDB.databases) {
+          const dbs = await indexedDB.databases();
+          await Promise.all(dbs.map(db => db && db.name ? new Promise(res => {
+            const req = indexedDB.deleteDatabase(db.name);
+            req.onsuccess = req.onerror = req.onblocked = () => res();
+          }) : Promise.resolve()));
+        }
+        alert('Cleared site data and caches. Reloading...');
+        location.reload();
+      } catch (e) {
+        alert('Clear failed: ' + e);
+      }
+    });
+
+    (async function main() {
+      setEl('loc', location.href);
+      setEl('ua', navigator.userAgent);
+      setEl('online', String(navigator.onLine));
+      setEl('swc', navigator.serviceWorker && navigator.serviceWorker.controller ? 'YES' : 'NO');
+      setEl('apiBase', typeof window !== 'undefined' ? String(window.API_BASE || '(empty)') : '(no window)');
+
+      // Fetch env.js fresh
+      try {
+        const envTxt = await fetch('/env.js', { cache: 'no-store' }).then(r => r.text());
+        setEl('envJs', envTxt);
+      } catch (e) {
+        setEl('envJs', 'ERROR: ' + (e && e.message || e));
+      }
+
+      // Proxy checks
+      if (window.API_BASE) {
+        try {
+          const health = await fetch(window.API_BASE + '/api/health').then(r => r.json());
+          setEl('health', health);
+        } catch (e) {
+          setEl('health', 'ERROR: ' + (e && e.message || e));
+        }
+        try {
+          const sports = await fetch(window.API_BASE + '/api/odds/sports').then(r => r.json());
+          setEl('sports', Array.isArray(sports) ? sports.slice(0, 10) : sports);
+        } catch (e) {
+          setEl('sports', 'ERROR: ' + (e && e.message || e));
+        }
+      } else {
+        setEl('health', 'window.API_BASE is empty');
+        setEl('sports', 'window.API_BASE is empty');
+      }
+
+      // List SW registrations
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          const info = await Promise.all(regs.map(async r => ({
+            scope: r.scope,
+            active: r.active && r.active.scriptURL,
+            installing: r.installing && r.installing.scriptURL,
+            waiting: r.waiting && r.waiting.scriptURL
+          })));
+          setEl('swRegs', info);
+        } else {
+          setEl('swRegs', 'serviceWorker not supported');
+        }
+      } catch (e) {
+        setEl('swRegs', 'ERROR: ' + (e && e.message || e));
+      }
+    })();
+  </script>
+</body>
+</html>
