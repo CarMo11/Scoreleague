@@ -13,3 +13,13 @@
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/env.js"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
