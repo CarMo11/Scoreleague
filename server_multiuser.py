@@ -761,7 +761,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
     def _get_cors_origin(self):
         """Determine allowed CORS origin based on request Origin and env."""
         origin = self.headers.get('Origin', '')
-        allowed = os.environ.get('ALLOWED_ORIGINS', 'https://scoreleague.netlify.app,https://scoreleague.onrender.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000').split(',')
+        allowed = os.environ.get('ALLOWED_ORIGINS', 'https://scoreleague.netlify.app,https://scoreleague.onrender.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000').split(',')
         allowed = [o.strip() for o in allowed if o.strip()]
         if origin and origin in allowed:
             return origin

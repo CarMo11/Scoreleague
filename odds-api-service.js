@@ -17,6 +17,7 @@ class OddsAPIService {
     this.apiBase = (typeof window !== 'undefined' && typeof window.API_BASE !== 'undefined')
       ? (window.API_BASE || '')
       : '';                                              // server proxy (preferred)
+    this.prodApiBase = 'https://scoreleague-api.onrender.com'; // production proxy fallback
 
     this.cache = new Map();                              // simple in-memory cache
     this.cacheTimeout = 10 * 60 * 1000;                  // 10 minutes
@@ -42,14 +43,19 @@ class OddsAPIService {
   async getSports() {
     const isFileProtocol = (typeof window !== 'undefined') && (window.location.protocol === 'file:');
 
-    // Prefer server proxy in any non-file context
-    if (!isFileProtocol && this.apiBase) {
-      try {
-        const url = `${this.apiBase}/api/odds/sports`;
-        const response = await fetch(url, { cache: 'no-store' });
-        if (response.ok) return await response.json();
-        // fall through to direct only if client key is set
-      } catch (_) { /* ignore and try fallback */ }
+    // Prefer server proxy in any non-file context (try local/base, then production)
+    if (!isFileProtocol) {
+      const bases = [];
+      if (this.apiBase) bases.push(this.apiBase);
+      if (!this.apiBase || this.apiBase !== this.prodApiBase) bases.push(this.prodApiBase);
+      for (const base of bases) {
+        try {
+          const url = `${base}/api/odds/sports`;
+          console.log('Fetching sports via proxy:', url);
+          const response = await fetch(url, { cache: 'no-store' });
+          if (response.ok) return await response.json();
+        } catch (_) { /* try next base */ }
+      }
     }
 
     // Fallback (only if a client key is explicitly set by the user)
@@ -144,21 +150,25 @@ class OddsAPIService {
       }
     }
 
-    // Try server proxy first (keeps real key private)
-    if (this.apiBase) {
-      try {
-        const proxyUrl =
-          `${this.apiBase}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
-        console.log('Fetching odds via proxy:', proxyUrl);
-        const response = await fetch(proxyUrl, { cache: 'no-store' });
-        if (response.ok) {
-          const data = await response.json();
-          this.cache.set(cacheKey, { data, timestamp: Date.now() });
-          console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy`);
-          return data;
-        }
-        // fall through to direct only if a client key is set
-      } catch (_) { /* ignore and try fallback */ }
+    // Try server proxy first (keeps real key private). Attempt apiBase then production.
+    {
+      const bases = [];
+      if (this.apiBase) bases.push(this.apiBase);
+      if (!this.apiBase || this.apiBase !== this.prodApiBase) bases.push(this.prodApiBase);
+      for (const base of bases) {
+        try {
+          const proxyUrl =
+            `${base}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
+          console.log('Fetching odds via proxy:', proxyUrl);
+          const response = await fetch(proxyUrl, { cache: 'no-store' });
+          if (response.ok) {
+            const data = await response.json();
+            this.cache.set(cacheKey, { data, timestamp: Date.now() });
+            console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy (${base})`);
+            return data;
+          }
+        } catch (_) { /* try next base */ }
+      }
     }
 
     // Direct call only if a user key is present
