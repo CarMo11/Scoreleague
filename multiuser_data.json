@@ -99,7 +99,7 @@
     {
       "id": "match_2",
       "homeTeam": "Hamburger SV",
-      "awayTeam": "FC Köln",
+      "awayTeam": "FC K\u00f6ln",
       "league": "2. Bundesliga",
       "date": "2024-08-10",
       "time": "18:30",
@@ -111,7 +111,7 @@
             "odds": 1.95
           },
           "2": {
-            "label": "Köln Win",
+            "label": "K\u00f6ln Win",
             "odds": 3.8
           },
           "X": {
@@ -295,7 +295,7 @@
       {
         "id": "bet_mebl994m7z6fmerv4d7",
         "userId": "user_mebkh0cse2lq4mldnjq",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -308,7 +308,7 @@
       {
         "id": "bet_meblg3hm474ey7pgb7g",
         "userId": "user_mebkh0cse2lq4mldnjq",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -321,7 +321,7 @@
       {
         "id": "bet_meblij12ih8xqpmd2t",
         "userId": "user_mebkh0cse2lq4mldnjq",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "total_goals",
         "selection": "under",
         "odds": 1.7,
@@ -334,7 +334,7 @@
       {
         "id": "bet_meblmtp4mx63mchit7",
         "userId": "user_mebkh0cse2lq4mldnjq",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -347,7 +347,7 @@
       {
         "id": "bet_mee96lezwow4avzr9aq",
         "userId": "user_mebkh0cse2lq4mldnjq",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -360,7 +360,7 @@
       {
         "id": "bet_mee96lfd2wlv5b3l9vj",
         "userId": "user_mebkh0cse2lq4mldnjq",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "away",
         "odds": 2.5,
@@ -388,7 +388,7 @@
       {
         "id": "bet_mega64gc3hg6mkifohn",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "home",
         "odds": 3.3,
@@ -401,7 +401,7 @@
       {
         "id": "bet_mega77n8bv6k69atkm",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -414,7 +414,7 @@
       {
         "id": "bet_megcrs3sw1y90lwzfzk",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -427,7 +427,7 @@
       {
         "id": "bet_megctnojcrmj92edqr7",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "home",
         "odds": 3.3,
@@ -440,7 +440,7 @@
       {
         "id": "bet_megcuhm14bo7vrqgtq2",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "home",
         "odds": 3.3,
@@ -466,7 +466,7 @@
       {
         "id": "bet_mege90wdv20846uf1e",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -479,7 +479,7 @@
       {
         "id": "bet_mege9m93q80xdjpkgbn",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "home",
         "odds": 3.3,
@@ -492,7 +492,7 @@
       {
         "id": "bet_megfiz9pj4zkuhhtq7",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "home",
         "odds": 3.3,
@@ -505,7 +505,7 @@
       {
         "id": "bet_megfiza9b1p4lm47kd",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.4,
@@ -518,7 +518,7 @@
       {
         "id": "bet_megfk06w68ji032jqlc",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "away",
         "odds": 2.25,
@@ -531,7 +531,7 @@
       {
         "id": "bet_megfk07befxxtgsob7o",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.4,
@@ -544,7 +544,7 @@
       {
         "id": "bet_megfm9jig4ogn14ir1u",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.4,
@@ -557,7 +557,7 @@
       {
         "id": "bet_megfm9jy9y1mtvdcdhs",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -570,7 +570,7 @@
       {
         "id": "bet_megwtfxn5hfusoubr33",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -583,7 +583,7 @@
       {
         "id": "bet_megxgbo13efhtk5u6a9",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -596,7 +596,7 @@
       {
         "id": "bet_megxgboic9uj6nm6fwi",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "home",
         "odds": 2.87,
@@ -609,7 +609,7 @@
       {
         "id": "bet_megyeip5cpcz77yeu0f",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -622,7 +622,7 @@
       {
         "id": "bet_megyeiptu202nwhzcsb",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "home",
         "odds": 2.87,
@@ -635,7 +635,7 @@
       {
         "id": "bet_megyevq6sw7ipmyprgn",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -648,7 +648,7 @@
       {
         "id": "bet_megyevqpps6gttvyhqd",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.4,
@@ -661,7 +661,7 @@
       {
         "id": "bet_megyjmkxuo2b3e5p50i",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "home",
         "odds": 3.3,
@@ -674,7 +674,7 @@
       {
         "id": "bet_megyjmlh7fhevq7mypf",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "away",
         "odds": 2.5,
@@ -687,7 +687,7 @@
       {
         "id": "bet_megz10p4ovcaac7kte",
         "userId": "user_17543257641297a1",
-        "matchId": "scpreußenmünster-scpaderborn07",
+        "matchId": "scpreu\u00dfenm\u00fcnster-scpaderborn07",
         "market": "match_result",
         "selection": "draw",
         "odds": 3.3,
@@ -700,7 +700,7 @@
       {
         "id": "bet_megz10piu8e5ttnojka",
         "userId": "user_17543257641297a1",
-        "matchId": "1.fcnürnberg-darmstadt98",
+        "matchId": "1.fcn\u00fcrnberg-darmstadt98",
         "market": "match_result",
         "selection": "home",
         "odds": 2.87,
@@ -726,5 +726,5 @@
     ]
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-08-18T10:27:35.788Z"
+  "lastUpdated": "2025-08-28T17:56:59.021974"
 }
