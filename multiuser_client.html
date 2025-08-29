@@ -6124,7 +6124,7 @@
                         </div>
                         <div class="betslip-options" style="display:flex; gap:8px; align-items:center;">
                             ${backBtnOpen}
-                            <button onclick="(window.loadOpenBetsInline && window.loadOpenBetsInline())" style="background:#F59E0B; color:#111827; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;">Aktualisieren</button>
+                            <button onclick="(window.loadOpenBetsInline && window.loadOpenBetsInline(true))" style="background:#F59E0B; color:#111827; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;">Aktualisieren</button>
                         </div>
                     </div>`;
                 const subnav = `
@@ -6544,7 +6544,7 @@
                         const disp = b.placedAt ? new Date(b.placedAt).toLocaleString('de-DE') : (b.timestamp ? new Date(b.timestamp).toLocaleString('de-DE') : '');
                         const stake = Number(b.stake || b.totalStake || 0);
                         const odds = Number(b.odds || b.totalOdds || 1);
-                        const potential = (isNaN(stake) || isNaN(odds)) ? NaN : (stake * odds);
+                        const potential = Number(b.potentialWin ?? (stake * odds));
                         const statusClass = String(b.status || '').toLowerCase();
                         const statusUC = statusClass ? statusClass.charAt(0).toUpperCase() + statusClass.slice(1) : 'Won';
                         const sc = (statusClass === 'won') ? 'color:#16a34a;' : ((statusClass === 'lost') ? 'color:#dc2626;' : 'color:#6b7280;');
@@ -6590,7 +6590,7 @@
                         const disp = l.displayTime || (l.timestamp ? new Date(l.timestamp).toLocaleString('de-DE') : '');
                         const stake = Number(l.totalStake || 0);
                         const odds = Number(l.totalOdds || l.combiOdds || 1);
-                        const potential = (isNaN(stake) || isNaN(odds)) ? NaN : (stake * odds);
+                        const potential = Number(l.potentialWin ?? (stake * odds));
                         const statusClass = String(l.status || '').toLowerCase();
                         const statusUC = statusClass ? statusClass.charAt(0).toUpperCase() + statusClass.slice(1) : 'Won';
                         const sc = (statusClass === 'won') ? 'color:#16a34a;' : ((statusClass === 'lost') ? 'color:#dc2626;' : 'color:#6b7280;');
@@ -6638,9 +6638,31 @@
         };
 
         // Load open (pending) bets inline inside the bet slip tab
-        window.loadOpenBetsInline = async function() {
+        window.loadOpenBetsInline = async function(force = false) {
             const wrap = document.getElementById('open-bets-inline');
             if (!wrap) return;
+            // Only do work if Open view is active, unless forced
+            try { if (!force && window.betslipViewMode && window.betslipViewMode !== 'open') { return; } } catch (_) {}
+            // Short TTL cache (10s): render cached HTML to avoid redundant network calls during bursts
+            try {
+                const now = Date.now();
+                const ttlMs = 10000;
+                if (!window._openBetsCache) {
+                    try {
+                        const persisted = localStorage.getItem('open_bets_cache');
+                        if (persisted) window._openBetsCache = JSON.parse(persisted) || null;
+                    } catch (_) { /* ignore */ }
+                }
+                const cache = window._openBetsCache;
+                if (!force && cache && cache.ts && (now - cache.ts < ttlMs) && typeof cache.html === 'string') {
+                    wrap.innerHTML = cache.html;
+                    try { if (typeof window.setMeineWettenCountBadge === 'function') window.setMeineWettenCountBadge(Number(cache.count) || 0); } catch (_) {}
+                    return;
+                }
+            } catch (_) { /* ignore */ }
+            // In-flight dedupe: skip if a load is already in progress (unless forced)
+            if (!force && window._openBetsLoading) { return; }
+            window._openBetsLoading = true;
             try {
                 try { if (wrap) wrap.setAttribute('data-loading', '1'); } catch (_) {}
                 try { console.debug('[openBets] start', { userId: (window.currentUser && window.currentUser.id) ? window.currentUser.id : null, hasIndex: (window.matchIndex && Object.keys(window.matchIndex).length) ? true : false }); } catch (_) {}
@@ -6722,10 +6744,7 @@
                 if (!entries.length) {
                     try {
                         const placedBets = JSON.parse(localStorage.getItem('placedBets') || '[]');
-                        const pending = (Array.isArray(placedBets) ? placedBets : []).filter(b => {
-                            const st = String(b.status || '').toLowerCase();
-                            return st === 'pending';
-                        }).slice(0, 10);
+                        const pending = (Array.isArray(placedBets) ? placedBets : []).filter(b => String(b.status || '').toLowerCase() === 'pending');
                         entries = pending.map(lb => ({ source: 'local', local: lb }));
                     } catch (_) { /* ignore */ }
                 }
@@ -6733,6 +6752,7 @@
                 if (!entries.length) {
                     wrap.innerHTML = '<div style="padding:16px; color:#6b7280;">Keine offenen Wetten.</div>';
                     try { if (typeof window.setMeineWettenCountBadge === 'function') window.setMeineWettenCountBadge(0); } catch (_) {}
+                    try { window._openBetsCache = { ts: Date.now(), html: wrap.innerHTML, count: 0 }; localStorage.setItem('open_bets_cache', JSON.stringify(window._openBetsCache)); } catch (_) {}
                     return;
                 }
 
@@ -6765,16 +6785,14 @@
                         }
                         const itemsHtml = (Array.isArray(s.bet_slip_items) ? s.bet_slip_items.map(si => {
                             const match = [si.home_team, si.away_team].filter(Boolean).join(' vs ');
-                            const sel = selectionLabelFromCode(si.bet_type);
+                            const sel = String(si.bet_type || '').toUpperCase();
                             const o = Number(si.odds || 1);
-                            const canRebet = !!(si.match_id && si.bet_type);
                             return `
                                 <div class="obi-line" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:2px 0;">
                                     <div class="obi-match" style="font-size:12px; color:#111827;">${match}</div>
-                                    <div class="obi-right" style="display:flex; align-items:center; gap:6px; font-size:12px; color:#111827;">
+                                    <div class="obi-right" style="display:flex; gap:6px; font-size:12px; color:#111827;">
                                         <span class="obi-type" style="background:#FEF3C7; color:#92400E; padding:2px 6px; border-radius:12px;">${sel}</span>
                                         <span class="obi-odds">@ ${isNaN(o) ? '-' : o.toFixed(2)}</span>
-                                        ${canRebet ? `<button class="rebet-btn" style="background:#F59E0B; color:#111827; border:none; border-radius:8px; padding:4px 8px; cursor:pointer;" onclick="event.stopPropagation(); window.rebetFromOpen('${String(si.match_id).replace(/'/g, '&#39;')}', '${match.replace(/'/g, '&#39;')}', '${String(si.bet_type).replace(/'/g, '&#39;')}', ${isNaN(o) ? 1 : o.toFixed(2)})">Wette erneut</button>` : ''}
                                     </div>
                                 </div>`;
                         }).join('') : '');
@@ -6940,12 +6958,31 @@
                 try { if (typeof window.setMeineWettenCountBadge === 'function') window.setMeineWettenCountBadge(entries.length); } catch (_) {}
 
                 wrap.innerHTML = `<div class="open-bets-list">${html}</div>`;
+                try { window._openBetsCache = { ts: Date.now(), html: wrap.innerHTML, count: entries.length }; localStorage.setItem('open_bets_cache', JSON.stringify(window._openBetsCache)); } catch (_) {}
             } catch (e) {
                 wrap.innerHTML = '<div style="padding:16px; color:#b91c1c;">Fehler beim Laden der offenen Wetten.</div>';
             } finally {
                 try { if (wrap) wrap.removeAttribute('data-loading'); } catch (_) {}
+                window._openBetsLoading = false;
             }
         }
+
+        // Expose a global to clear the cached Open Bets (in-memory + persisted)
+        window.clearOpenBetsCache = function() {
+            try { window._openBetsCache = null; } catch (_) {}
+            try { localStorage.removeItem('open_bets_cache'); } catch (_) {}
+        }
+
+        // If another tab clears the cache via diagnostics, drop our in-memory copy
+        try {
+            window.addEventListener('storage', (e) => {
+                try {
+                    if (e && e.key === 'open_bets_cache' && e.newValue === null) {
+                        window._openBetsCache = null;
+                    }
+                } catch (_) { /* ignore */ }
+            });
+        } catch (_) { /* ignore */ }
 
         // Update the MEINE WETTEN count badge next to the chip
         window.setMeineWettenCountBadge = function(count) {
