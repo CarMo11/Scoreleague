@@ -46,8 +46,14 @@ class OddsAPIService {
     // Prefer server proxy in any non-file context (try local/base, then production)
     if (!isFileProtocol) {
       const bases = [];
-      if (this.apiBase) bases.push(this.apiBase);
-      if (!this.apiBase || this.apiBase !== this.prodApiBase) bases.push(this.prodApiBase);
+      // Dynamically read the latest API base so URL/localStorage overrides are honored
+      const apiBaseNow = (typeof window !== 'undefined' && typeof window.API_BASE !== 'undefined' && window.API_BASE)
+        ? window.API_BASE
+        : this.apiBase;
+      if (apiBaseNow) bases.push(apiBaseNow);
+      // keep instance in sync with the latest detected base
+      this.apiBase = apiBaseNow || this.apiBase;
+      if (!apiBaseNow || apiBaseNow !== this.prodApiBase) bases.push(this.prodApiBase);
       for (const base of bases) {
         try {
           const url = `${base}/api/odds/sports`;
@@ -153,12 +159,17 @@ class OddsAPIService {
     // Try server proxy first (keeps real key private). Attempt apiBase then production.
     {
       const bases = [];
-      if (this.apiBase) bases.push(this.apiBase);
-      if (!this.apiBase || this.apiBase !== this.prodApiBase) bases.push(this.prodApiBase);
+      // Dynamically read the latest API base so URL/localStorage overrides are honored
+      const apiBaseNow = (typeof window !== 'undefined' && typeof window.API_BASE !== 'undefined' && window.API_BASE)
+        ? window.API_BASE
+        : this.apiBase;
+      if (apiBaseNow) bases.push(apiBaseNow);
+      // keep instance in sync with the latest detected base
+      this.apiBase = apiBaseNow || this.apiBase;
+      if (!apiBaseNow || apiBaseNow !== this.prodApiBase) bases.push(this.prodApiBase);
       for (const base of bases) {
         try {
-          const proxyUrl =
-            `${base}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
+          const proxyUrl = `${base}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
           console.log('Fetching odds via proxy:', proxyUrl);
           const response = await fetch(proxyUrl, { cache: 'no-store' });
           if (response.ok) {

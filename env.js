@@ -3,7 +3,28 @@
   try {
     if (typeof window !== 'undefined') {
       const current = (typeof window.API_BASE === 'string') ? window.API_BASE.trim() : '';
-      if (!current) {
+      // 1) URL param override (?api_base=... or ?api=...)
+      try {
+        const usp = new URLSearchParams(window.location.search);
+        const paramBase = (usp.get('api_base') || usp.get('api') || '').trim();
+        if (paramBase) {
+          window.API_BASE = paramBase;
+          try { localStorage.setItem('api_base', paramBase); } catch (_) {}
+        }
+      } catch (_) {}
+
+      // 2) localStorage override (if not already set)
+      if (!window.API_BASE || !String(window.API_BASE).trim()) {
+        try {
+          const saved = localStorage.getItem('api_base');
+          if (saved && saved.trim()) {
+            window.API_BASE = saved.trim();
+          }
+        } catch (_) {}
+      }
+
+      // 3) Default based on host if still unset
+      if (!window.API_BASE || !String(window.API_BASE).trim()) {
         const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
         window.API_BASE = isLocal ? 'http://localhost:3002' : 'https://scoreleague-api.onrender.com';
       }
