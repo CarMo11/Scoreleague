@@ -6,6 +6,13 @@
   from = "/"
   to = "/multiuser_client.html"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/index.html"
+  to = "/multiuser_client.html"
+  status = 301
+  force = true
 
 [[headers]]
   for = "/*"
