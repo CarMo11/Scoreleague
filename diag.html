@@ -118,6 +118,21 @@
       }
     });
 
+    // Clear Open Bets cache (works even if multiuser_client scripts are not loaded)
+    document.getElementById('btn-clear-open-bets-cache').addEventListener('click', () => {
+      try {
+        if (typeof window.clearOpenBetsCache === 'function') {
+          window.clearOpenBetsCache();
+        } else {
+          // Fallback: remove persisted key so other tabs drop in-memory cache via `storage` event
+          localStorage.removeItem('open_bets_cache');
+        }
+        alert('Open Bets cache cleared.');
+      } catch (e) {
+        alert('Failed to clear Open Bets cache: ' + e);
+      }
+    });
+
     (async function main() {
       setEl('loc', location.href);
       setEl('ua', navigator.userAgent);
