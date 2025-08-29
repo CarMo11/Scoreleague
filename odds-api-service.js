@@ -24,8 +24,24 @@ class OddsAPIService {
     // cache sports list for lightweight key resolution
     this.sportsList = null;
     this.sportsListFetchedAt = 0;
-    this.sportsListTTL = 60 * 60 * 1000;                 // 1 hour
+    this.sportsListTTL = 60 * 60 * 1000;                  // 1 hour
+    this._sportsListPromise = null;                        // single-flight guard
+    this._oddsPromises = new Map();                        // single-flight per cacheKey
     this.resolvedSportAliases = Object.create(null);
+
+    // Hydrate sports list from localStorage if fresh
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem('odds_sports_list');
+        if (saved) {
+          const obj = JSON.parse(saved);
+          if (obj && Array.isArray(obj.list) && typeof obj.ts === 'number' && (Date.now() - obj.ts) < this.sportsListTTL) {
+            this.sportsList = obj.list;
+            this.sportsListFetchedAt = obj.ts;
+          }
+        }
+      }
+    } catch (_) { /* ignore */ }
   }
 
   // Allow runtime update of the API key and persist to localStorage
@@ -58,7 +74,7 @@ class OddsAPIService {
         try {
           const url = `${base}/api/odds/sports`;
           console.log('Fetching sports via proxy:', url);
-          const response = await fetch(url, { cache: 'no-store' });
+          const response = await this._fetchWithTimeout(url, { cache: 'no-store' });
           if (response.ok) {
             const result = await response.json();
             if (Array.isArray(result) && result.length > 0) {
@@ -93,15 +109,35 @@ class OddsAPIService {
   // Cache and return the sports list to help resolve sport key aliases
   async loadSportsList() {
     try {
-      if (this.sportsList && (Date.now() - this.sportsListFetchedAt) < this.sportsListTTL) {
-        return this.sportsList;
+      const fresh = this.sportsList && (Date.now() - this.sportsListFetchedAt) < this.sportsListTTL;
+      if (fresh) return this.sportsList;
+
+      // Single-flight: if a fetch is already in progress, await it
+      if (this._sportsListPromise) {
+        return await this._sportsListPromise;
       }
-      const list = await this.getSports();
-      if (Array.isArray(list)) {
-        this.sportsList = list;
-        this.sportsListFetchedAt = Date.now();
-        return this.sportsList;
-      }
+
+      this._sportsListPromise = (async () => {
+        try {
+          const list = await this.getSports();
+          if (Array.isArray(list) && list.length) {
+            this.sportsList = list;
+            this.sportsListFetchedAt = Date.now();
+            try {
+              if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('odds_sports_list', JSON.stringify({ ts: this.sportsListFetchedAt, list: this.sportsList }));
+              }
+            } catch (_) { /* ignore */ }
+            return this.sportsList;
+          }
+          return [];
+        } finally {
+          // Clear the in-flight marker so future calls can retry
+          this._sportsListPromise = null;
+        }
+      })();
+
+      return await this._sportsListPromise;
     } catch (_) { /* ignore */ }
     return [];
   }
@@ -163,64 +199,77 @@ class OddsAPIService {
       }
     }
 
-    // Try server proxy first (keeps real key private). Attempt apiBase then production.
-    {
-      const bases = [];
-      // Dynamically read the latest API base so URL/localStorage overrides are honored
-      const apiBaseNow = (typeof window !== 'undefined' && typeof window.API_BASE !== 'undefined' && window.API_BASE)
-        ? window.API_BASE
-        : this.apiBase;
-      if (apiBaseNow) bases.push(apiBaseNow);
-      // keep instance in sync with the latest detected base
-      this.apiBase = apiBaseNow || this.apiBase;
-      if (!apiBaseNow || apiBaseNow !== this.prodApiBase) bases.push(this.prodApiBase);
-      for (const base of bases) {
-        try {
-          const proxyUrl = `${base}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
-          console.log('Fetching odds via proxy:', proxyUrl);
-          const response = await fetch(proxyUrl, { cache: 'no-store' });
-          if (response.ok) {
-            const raw = await response.json();
-            const data = (raw && !Array.isArray(raw) && Array.isArray(raw.matches)) ? raw.matches : raw;
-            if (Array.isArray(data) && data.length === 0) {
-              console.warn('Empty odds from base, trying next:', base);
-              // do not cache empty results from this base; try the next base
-              continue;
+    // Single-flight per cacheKey: share one in-flight request
+    if (this._oddsPromises.has(cacheKey)) {
+      return await this._oddsPromises.get(cacheKey);
+    }
+
+    const fetchOdds = async () => {
+      // Try server proxy first (keeps real key private). Attempt apiBase then production.
+      {
+        const bases = [];
+        // Dynamically read the latest API base so URL/localStorage overrides are honored
+        const apiBaseNow = (typeof window !== 'undefined' && typeof window.API_BASE !== 'undefined' && window.API_BASE)
+          ? window.API_BASE
+          : this.apiBase;
+        if (apiBaseNow) bases.push(apiBaseNow);
+        // keep instance in sync with the latest detected base
+        this.apiBase = apiBaseNow || this.apiBase;
+        if (!apiBaseNow || apiBaseNow !== this.prodApiBase) bases.push(this.prodApiBase);
+        for (const base of bases) {
+          try {
+            const proxyUrl = `${base}/api/odds?sport=${encodeURIComponent(resolvedKey)}&regions=${regions}&markets=${markets}&oddsFormat=decimal`;
+            console.log('Fetching odds via proxy:', proxyUrl);
+            const response = await this._fetchWithTimeout(proxyUrl, { cache: 'no-store' });
+            if (response.ok) {
+              const raw = await response.json();
+              const data = (raw && !Array.isArray(raw) && Array.isArray(raw.matches)) ? raw.matches : raw;
+              if (Array.isArray(data) && data.length === 0) {
+                console.warn('Empty odds from base, trying next:', base);
+                // do not cache empty results from this base; try the next base
+                continue;
+              }
+              this.cache.set(cacheKey, { data, timestamp: Date.now() });
+              console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy (${base})`);
+              return data;
             }
-            this.cache.set(cacheKey, { data, timestamp: Date.now() });
-            console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy (${base})`);
-            return data;
-          }
-        } catch (_) { /* try next base */ }
+          } catch (_) { /* try next base */ }
+        }
       }
-    }
 
-    // Direct call only if a user key is present
-    if (!this.apiKey) {
-      console.warn('No client API key set; skipping direct The Odds API request.');
-      return null;
-    }
-
-    try {
-      const url =
-        `${this.baseUrl}/sports/${resolvedKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=${this.apiKey}`;
-      const safeUrl =
-        `${this.baseUrl}/sports/${resolvedKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=***`;
-      console.log('Fetching odds directly from:', safeUrl);
-
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) {
-        if (response.status === 401) throw new Error('Invalid API key. Get a free key at https://the-odds-api.com/');
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Direct call only if a user key is present
+      if (!this.apiKey) {
+        console.warn('No client API key set; skipping direct The Odds API request.');
+        return null;
       }
-      const data = await response.json();
-      this.cache.set(cacheKey, { data, timestamp: Date.now() });
-      console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches from The Odds API`);
-      return data;
-    } catch (err) {
-      console.error('Error fetching odds:', err);
-      return null;
-    }
+
+      try {
+        const url =
+          `${this.baseUrl}/sports/${resolvedKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=${this.apiKey}`;
+        const safeUrl =
+          `${this.baseUrl}/sports/${resolvedKey}/odds/?regions=${regions}&markets=${markets}&oddsFormat=decimal&apiKey=***`;
+        console.log('Fetching odds directly from:', safeUrl);
+
+        const response = await this._fetchWithTimeout(url, { cache: 'no-store' });
+        if (!response.ok) {
+          if (response.status === 401) throw new Error('Invalid API key. Get a free key at https://the-odds-api.com/');
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        this.cache.set(cacheKey, { data, timestamp: Date.now() });
+        console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches from The Odds API`);
+        return data;
+      } catch (err) {
+        console.error('Error fetching odds:', err);
+        return null;
+      }
+    };
+
+    const p = fetchOdds().finally(() => {
+      this._oddsPromises.delete(cacheKey);
+    });
+    this._oddsPromises.set(cacheKey, p);
+    return await p;
   }
 
   // Convert API data to our app format
@@ -334,5 +383,12 @@ class OddsAPIService {
 // Export to window
 window.OddsAPIService = OddsAPIService;
 window.oddsAPIService = new OddsAPIService();
+
+// Convenience: clear in-memory odds caches quickly from console/diag
+window.clearOddsCache = function clearOddsCache() {
+  try { window.oddsAPIService.cache.clear(); } catch (_) {}
+  try { window.oddsAPIService._oddsPromises && window.oddsAPIService._oddsPromises.clear(); } catch (_) {}
+  console.log('🧹 Cleared in-memory odds cache');
+};
 
 } // end guard

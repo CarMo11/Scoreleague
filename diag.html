@@ -122,13 +122,21 @@
           const health = await fetch(window.API_BASE + '/api/health').then(r => r.json());
           setEl('health', health);
         } catch (e) {
-          setEl('health', 'ERROR: ' + (e && e.message || e));
+          // Treat AbortError as neutral (often caused by reload/navigation)
+          const msg = ((e && e.name === 'AbortError') || /aborted/i.test(String((e && e.message) || e)))
+            ? 'ABORTED (neutral)'
+            : 'ERROR: ' + ((e && e.message) || e);
+          setEl('health', msg);
         }
         try {
           const sports = await fetch(window.API_BASE + '/api/odds/sports').then(r => r.json());
           setEl('sports', Array.isArray(sports) ? sports.slice(0, 10) : sports);
         } catch (e) {
-          setEl('sports', 'ERROR: ' + (e && e.message || e));
+          // Treat AbortError as neutral (often caused by reload/navigation)
+          const msg = ((e && e.name === 'AbortError') || /aborted/i.test(String((e && e.message) || e)))
+            ? 'ABORTED (neutral)'
+            : 'ERROR: ' + ((e && e.message) || e);
+          setEl('sports', msg);
         }
       } else {
         setEl('health', 'window.API_BASE is empty');
