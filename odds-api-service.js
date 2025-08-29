@@ -55,6 +55,18 @@ class OddsAPIService {
     console.log('🔑 Odds API key updated to', this.apiKey ? this.apiKey.slice(0, 6) + '…' : 'EMPTY');
   }
 
+  // Helper: fetch with timeout to avoid hanging requests
+  async _fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const id = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    try {
+      const opts = controller ? { ...options, signal: controller.signal } : options;
+      return await fetch(url, opts);
+    } finally {
+      if (id) clearTimeout(id);
+    }
+  }
+
   // Get available sports (free endpoint via proxy; only direct-call if a client key exists)
   async getSports() {
     const isFileProtocol = (typeof window !== 'undefined') && (window.location.protocol === 'file:');
@@ -97,7 +109,7 @@ class OddsAPIService {
       const url = `${this.baseUrl}/sports/?apiKey=${this.apiKey}`;
       const safeUrl = `${this.baseUrl}/sports/?apiKey=***`;
       console.log('Fetching sports directly from:', safeUrl);
-      const response = await fetch(url, { cache: 'no-store' });
+      const response = await this._fetchWithTimeout(url, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (err) {
