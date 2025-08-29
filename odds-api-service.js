@@ -20,7 +20,7 @@ class OddsAPIService {
     this.prodApiBase = 'https://scoreleague-api.onrender.com'; // production proxy fallback
 
     this.cache = new Map();                              // simple in-memory cache
-    this.cacheTimeout = 10 * 60 * 1000;                  // 10 minutes
+    this.cacheTimeout = 30 * 60 * 1000;                  // 30 minutes (reduced API calls)
     // cache sports list for lightweight key resolution
     this.sportsList = null;
     this.sportsListFetchedAt = 0;

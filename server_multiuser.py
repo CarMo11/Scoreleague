@@ -11,6 +11,11 @@ import uuid
 import urllib.request
 import urllib.error
 
+# Simple in-memory caches for odds endpoints to conserve API credits
+ODDS_CACHE_TTL = int(os.environ.get('ODDS_CACHE_TTL_SECONDS', '1800'))  # 30 minutes default
+ODDS_SPORTS_CACHE = {'data': None, 'ts': 0}
+ODDS_CACHE = {}  # key -> {'data': list, 'ts': float}
+
 class MultiUserGameServer:
     def __init__(self):
         # Allow overriding data directory for cloud hosts with persistent disks
@@ -307,6 +312,13 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         # --- Secure server-side proxy for The Odds API ---
         elif path == '/api/odds/sports':
+            # Serve sports from cache when fresh
+            try:
+                if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data'] and (time.time() - ODDS_SPORTS_CACHE.get('ts', 0) < ODDS_CACHE_TTL):
+                    self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                    return
+            except Exception:
+                pass
             odds_key = os.environ.get('ODDS_API_KEY')
             if not odds_key:
                 # Fallback: proxy to production API to avoid 501 during local dev
@@ -324,7 +336,16 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                         with urllib.request.urlopen(req, timeout=12) as resp:
                             body = resp.read().decode('utf-8')
                             data = json.loads(body)
-                            self.send_json_response(data)
+                            if isinstance(data, list) and data:
+                                ODDS_SPORTS_CACHE['data'] = data
+                                ODDS_SPORTS_CACHE['ts'] = time.time()
+                                self.send_json_response(data)
+                                return
+                            # On empty result, prefer any cached data
+                            if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
+                                self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                                return
+                            self.send_json_response([])
                             return
                     except Exception:
                         pass
@@ -337,7 +358,16 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 with urllib.request.urlopen(req, timeout=12) as resp:
                     body = resp.read().decode('utf-8')
                     data = json.loads(body)
-                    self.send_json_response(data)
+                    if isinstance(data, list) and data:
+                        ODDS_SPORTS_CACHE['data'] = data
+                        ODDS_SPORTS_CACHE['ts'] = time.time()
+                        self.send_json_response(data)
+                    else:
+                        # Prefer cached data on empty
+                        if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
+                            self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                        else:
+                            self.send_json_response(data)
             except urllib.error.HTTPError as e:
                 self.send_json_response({'error': 'Upstream error', 'status': e.code}, 502)
             except Exception as e:
@@ -356,13 +386,38 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Avoid recursion if running on the same host as the fallback
                 if fallback_base and fb_host and req_host != fb_host:
                     try:
+                        # Build cache key from query
+                        try:
+                            params_fb = parse_qs(query or '')
+                            sport_fb = (params_fb.get('sport') or params_fb.get('sportKey') or [''])[0].strip()
+                            regions_fb = (params_fb.get('regions') or ['uk'])[0]
+                            markets_fb = (params_fb.get('markets') or ['h2h,totals'])[0]
+                            odds_format_fb = (params_fb.get('oddsFormat') or ['decimal'])[0]
+                            cache_key_fb = f"{sport_fb}|{regions_fb}|{markets_fb}|{odds_format_fb}"
+                            c = ODDS_CACHE.get(cache_key_fb)
+                            if c and isinstance(c.get('data'), list) and c['data'] and (time.time() - c.get('ts', 0) < ODDS_CACHE_TTL):
+                                self.send_json_response(c['data'])
+                                return
+                        except Exception:
+                            cache_key_fb = None
                         q = query
                         upstream_fb = f"{fallback_base}/api/odds" + (f"?{q}" if q else "")
                         req = urllib.request.Request(upstream_fb, headers={'User-Agent': 'ScoreLeague/1.0'})
                         with urllib.request.urlopen(req, timeout=15) as resp:
                             body = resp.read().decode('utf-8')
                             data = json.loads(body)
-                            self.send_json_response(data)
+                            if isinstance(data, list) and data:
+                                if cache_key_fb:
+                                    ODDS_CACHE[cache_key_fb] = {'data': data, 'ts': time.time()}
+                                self.send_json_response(data)
+                                return
+                            # Prefer cached on empty
+                            if cache_key_fb:
+                                c = ODDS_CACHE.get(cache_key_fb)
+                                if c and c.get('data'):
+                                    self.send_json_response(c['data'])
+                                    return
+                            self.send_json_response([])
                             return
                     except Exception:
                         pass
@@ -377,6 +432,15 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             regions = (params.get('regions') or ['uk'])[0]
             markets = (params.get('markets') or ['h2h,totals'])[0]
             odds_format = (params.get('oddsFormat') or ['decimal'])[0]
+            # Serve from cache if fresh
+            try:
+                cache_key = f"{sport}|{regions}|{markets}|{odds_format}"
+                c = ODDS_CACHE.get(cache_key)
+                if c and isinstance(c.get('data'), list) and c['data'] and (time.time() - c.get('ts', 0) < ODDS_CACHE_TTL):
+                    self.send_json_response(c['data'])
+                    return
+            except Exception:
+                pass
             upstream = (
                 f"https://api.the-odds-api.com/v4/sports/{quote(sport)}/odds/"
                 f"?regions={regions}&markets={markets}&oddsFormat={odds_format}&apiKey={odds_key}"
@@ -386,7 +450,15 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 with urllib.request.urlopen(req, timeout=15) as resp:
                     body = resp.read().decode('utf-8')
                     data = json.loads(body)
-                    self.send_json_response(data)
+                    if isinstance(data, list) and data:
+                        ODDS_CACHE[cache_key] = {'data': data, 'ts': time.time()}
+                        self.send_json_response(data)
+                    else:
+                        c = ODDS_CACHE.get(cache_key)
+                        if c and c.get('data'):
+                            self.send_json_response(c['data'])
+                        else:
+                            self.send_json_response(data)
             except urllib.error.HTTPError as e:
                 try:
                     err_body = e.read().decode('utf-8')
