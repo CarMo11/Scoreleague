@@ -309,7 +309,27 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/odds/sports':
             odds_key = os.environ.get('ODDS_API_KEY')
             if not odds_key:
-                self.send_json_response({'error': 'Odds API key not configured (set ODDS_API_KEY env var)'}, 501)
+                # Fallback: proxy to production API to avoid 501 during local dev
+                fallback_base = os.environ.get('FALLBACK_PROXY_BASE', 'https://scoreleague-api.onrender.com').rstrip('/')
+                try:
+                    req_host = self.headers.get('Host', '')
+                    fb_host = urlparse(fallback_base).netloc
+                except Exception:
+                    fb_host = ''
+                # Avoid recursion if running on the same host as the fallback
+                if fallback_base and fb_host and req_host != fb_host:
+                    try:
+                        upstream_fb = f"{fallback_base}/api/odds/sports"
+                        req = urllib.request.Request(upstream_fb, headers={'User-Agent': 'ScoreLeague/1.0'})
+                        with urllib.request.urlopen(req, timeout=12) as resp:
+                            body = resp.read().decode('utf-8')
+                            data = json.loads(body)
+                            self.send_json_response(data)
+                            return
+                    except Exception:
+                        pass
+                # Graceful degrade if fallback fails
+                self.send_json_response([])
                 return
             upstream = f"https://api.the-odds-api.com/v4/sports/?apiKey={odds_key}"
             try:
@@ -326,7 +346,28 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/odds':
             odds_key = os.environ.get('ODDS_API_KEY')
             if not odds_key:
-                self.send_json_response({'error': 'Odds API key not configured (set ODDS_API_KEY env var)'}, 501)
+                # Fallback: proxy to production API to avoid 501 during local dev
+                fallback_base = os.environ.get('FALLBACK_PROXY_BASE', 'https://scoreleague-api.onrender.com').rstrip('/')
+                try:
+                    req_host = self.headers.get('Host', '')
+                    fb_host = urlparse(fallback_base).netloc
+                except Exception:
+                    fb_host = ''
+                # Avoid recursion if running on the same host as the fallback
+                if fallback_base and fb_host and req_host != fb_host:
+                    try:
+                        q = query
+                        upstream_fb = f"{fallback_base}/api/odds" + (f"?{q}" if q else "")
+                        req = urllib.request.Request(upstream_fb, headers={'User-Agent': 'ScoreLeague/1.0'})
+                        with urllib.request.urlopen(req, timeout=15) as resp:
+                            body = resp.read().decode('utf-8')
+                            data = json.loads(body)
+                            self.send_json_response(data)
+                            return
+                    except Exception:
+                        pass
+                # Graceful degrade if fallback fails
+                self.send_json_response([])
                 return
             params = parse_qs(query)
             sport = (params.get('sport') or params.get('sportKey') or [''])[0].strip()

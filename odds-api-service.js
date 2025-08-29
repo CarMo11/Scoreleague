@@ -162,7 +162,8 @@ class OddsAPIService {
           console.log('Fetching odds via proxy:', proxyUrl);
           const response = await fetch(proxyUrl, { cache: 'no-store' });
           if (response.ok) {
-            const data = await response.json();
+            const raw = await response.json();
+            const data = (raw && !Array.isArray(raw) && Array.isArray(raw.matches)) ? raw.matches : raw;
             this.cache.set(cacheKey, { data, timestamp: Date.now() });
             console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy (${base})`);
             return data;
@@ -202,6 +203,21 @@ class OddsAPIService {
   // Convert API data to our app format
   convertToAppFormat(apiData) {
     if (!apiData || !Array.isArray(apiData)) return [];
+    // If data already appears to be in app format, return it unchanged
+    try {
+      const first = apiData[0] || {};
+      const isAppFormat = (
+        ('homeTeam' in first && 'awayTeam' in first) ||
+        (first.markets && (
+          'match_result' in first.markets ||
+          'total_goals' in first.markets ||
+          'both_teams_score' in first.markets ||
+          '1x2' in first.markets ||
+          'over_under' in first.markets
+        ))
+      );
+      if (isAppFormat) return apiData;
+    } catch (_) { /* fall through to conversion */ }
     return apiData.map((match, index) => {
       const h2hMarket = match.bookmakers?.[0]?.markets?.find(m => m.key === 'h2h');
       const totalsMarket = match.bookmakers?.[0]?.markets?.find(m => m.key === 'totals');

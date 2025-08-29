@@ -5,7 +5,7 @@
       const current = (typeof window.API_BASE === 'string') ? window.API_BASE.trim() : '';
       if (!current) {
         const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-        window.API_BASE = isLocal ? 'http://localhost:3001' : 'https://scoreleague-api.onrender.com';
+        window.API_BASE = isLocal ? 'http://localhost:3002' : 'https://scoreleague-api.onrender.com';
       }
       try { console.log('env.js: API_BASE =', window.API_BASE); } catch(_) {}
     }
