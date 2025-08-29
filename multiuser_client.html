@@ -6638,6 +6638,33 @@
             }
         };
 
+        // Helpers for Open Bets UI
+        window.setOpenBetsLoading = function(isLoading) {
+            try {
+                const btn = document.getElementById('open-bets-refresh-btn');
+                if (!btn) return;
+                if (isLoading) {
+                    if (!btn.dataset._orig) btn.dataset._orig = btn.textContent || 'Aktualisieren';
+                    btn.textContent = 'Aktualisieren…';
+                    btn.setAttribute('aria-busy', 'true');
+                    btn.disabled = true;
+                } else {
+                    btn.textContent = btn.dataset._orig || 'Aktualisieren';
+                    btn.removeAttribute('aria-busy');
+                    btn.disabled = false;
+                }
+            } catch (_) { /* ignore */ }
+        };
+
+        window.updateOpenBetsLastUpdated = function(ts) {
+            try {
+                const el = document.getElementById('open-bets-last-updated');
+                if (!el) return;
+                const t = (typeof ts === 'number') ? new Date(ts) : (ts ? new Date(ts) : new Date());
+                el.textContent = 'Zuletzt aktualisiert: ' + t.toLocaleTimeString('de-DE');
+            } catch (_) { /* ignore */ }
+        };
+
         // Load open (pending) bets inline inside the bet slip tab
         window.loadOpenBetsInline = async function(force = false) {
             const wrap = document.getElementById('open-bets-inline');
@@ -6658,6 +6685,8 @@
                 if (!force && cache && cache.ts && (now - cache.ts < ttlMs) && typeof cache.html === 'string') {
                     wrap.innerHTML = cache.html;
                     try { if (typeof window.setMeineWettenCountBadge === 'function') window.setMeineWettenCountBadge(Number(cache.count) || 0); } catch (_) {}
+                    try { if (typeof window.updateOpenBetsLastUpdated === 'function') window.updateOpenBetsLastUpdated(cache.ts); } catch (_) {}
+                    try { if (typeof window.setOpenBetsLoading === 'function') window.setOpenBetsLoading(false); } catch (_) {}
                     return;
                 }
             } catch (_) { /* ignore */ }
@@ -6666,6 +6695,7 @@
             window._openBetsLoading = true;
             try {
                 try { if (wrap) wrap.setAttribute('data-loading', '1'); } catch (_) {}
+                try { if (typeof window.setOpenBetsLoading === 'function') window.setOpenBetsLoading(true); } catch (_) {}
                 try { console.debug('[openBets] start', { userId: (window.currentUser && window.currentUser.id) ? window.currentUser.id : null, hasIndex: (window.matchIndex && Object.keys(window.matchIndex).length) ? true : false }); } catch (_) {}
                 // Ensure we have a match index for mapping matchId -> match name (home vs away)
                 try {
@@ -6754,8 +6784,20 @@
                     wrap.innerHTML = '<div style="padding:16px; color:#6b7280;">Keine offenen Wetten.</div>';
                     try { if (typeof window.setMeineWettenCountBadge === 'function') window.setMeineWettenCountBadge(0); } catch (_) {}
                     try { window._openBetsCache = { ts: Date.now(), html: wrap.innerHTML, count: 0 }; localStorage.setItem('open_bets_cache', JSON.stringify(window._openBetsCache)); } catch (_) {}
+                    try { if (typeof window.updateOpenBetsLastUpdated === 'function') window.updateOpenBetsLastUpdated(window._openBetsCache && window._openBetsCache.ts ? window._openBetsCache.ts : Date.now()); } catch (_) {}
                     return;
                 }
+
+                // Normalize timestamps and sort by most recent first
+                try {
+                    const ts = (it) => {
+                        if (!it) return 0;
+                        if (it.source === 'db') return new Date((it.slip && (it.slip.placed_at || it.slip.created_at)) || 0).getTime();
+                        if (it.source === 'node') return new Date((it.node && (it.node.placedAt || it.node.timestamp)) || 0).getTime();
+                        return new Date((it.local && (it.local.timestamp || it.local.displayTime)) || 0).getTime();
+                    };
+                    entries.sort((a, b) => (ts(b) || 0) - (ts(a) || 0));
+                } catch (_) { /* ignore */ }
 
                 const html = entries.map((item, idx) => {
                     if (item.source === 'db') {
@@ -6960,10 +7002,12 @@
 
                 wrap.innerHTML = `<div class="open-bets-list">${html}</div>`;
                 try { window._openBetsCache = { ts: Date.now(), html: wrap.innerHTML, count: entries.length }; localStorage.setItem('open_bets_cache', JSON.stringify(window._openBetsCache)); } catch (_) {}
+                try { if (typeof window.updateOpenBetsLastUpdated === 'function') window.updateOpenBetsLastUpdated(window._openBetsCache && window._openBetsCache.ts ? window._openBetsCache.ts : Date.now()); } catch (_) {}
             } catch (e) {
                 wrap.innerHTML = '<div style="padding:16px; color:#b91c1c;">Fehler beim Laden der offenen Wetten.</div>';
             } finally {
                 try { if (wrap) wrap.removeAttribute('data-loading'); } catch (_) {}
+                try { if (typeof window.setOpenBetsLoading === 'function') window.setOpenBetsLoading(false); } catch (_) {}
                 window._openBetsLoading = false;
             }
         }
