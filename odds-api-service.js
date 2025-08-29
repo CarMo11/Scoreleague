@@ -59,7 +59,14 @@ class OddsAPIService {
           const url = `${base}/api/odds/sports`;
           console.log('Fetching sports via proxy:', url);
           const response = await fetch(url, { cache: 'no-store' });
-          if (response.ok) return await response.json();
+          if (response.ok) {
+            const result = await response.json();
+            if (Array.isArray(result) && result.length > 0) {
+              return result;
+            }
+            console.warn('Empty sports from base, trying next:', base);
+            continue;
+          }
         } catch (_) { /* try next base */ }
       }
     }
@@ -175,6 +182,11 @@ class OddsAPIService {
           if (response.ok) {
             const raw = await response.json();
             const data = (raw && !Array.isArray(raw) && Array.isArray(raw.matches)) ? raw.matches : raw;
+            if (Array.isArray(data) && data.length === 0) {
+              console.warn('Empty odds from base, trying next:', base);
+              // do not cache empty results from this base; try the next base
+              continue;
+            }
             this.cache.set(cacheKey, { data, timestamp: Date.now() });
             console.log(`Fetched ${Array.isArray(data) ? data.length : 0} matches via proxy (${base})`);
             return data;
