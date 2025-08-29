@@ -6124,7 +6124,8 @@
                         </div>
                         <div class="betslip-options" style="display:flex; gap:8px; align-items:center;">
                             ${backBtnOpen}
-                            <button onclick="(window.loadOpenBetsInline && window.loadOpenBetsInline(true))" style="background:#F59E0B; color:#111827; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;">Aktualisieren</button>
+                            <button id="open-bets-refresh-btn" onclick="(window.loadOpenBetsInline && window.loadOpenBetsInline(true))" style="background:#F59E0B; color:#111827; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;">Aktualisieren</button>
+                            <span id="open-bets-last-updated" style="font-size:12px; color:#6b7280;"></span>
                         </div>
                     </div>`;
                 const subnav = `
