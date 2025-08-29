@@ -11,6 +11,13 @@
           window.API_BASE = paramBase;
           try { localStorage.setItem('api_base', paramBase); } catch (_) {}
         }
+
+        // Optional: allow setting a client Odds API key via URL param for quick local testing
+        // Usage: ?odds_key=YOUR_KEY (stored to localStorage as 'odds_api_key')
+        const oddsKey = (usp.get('odds_key') || '').trim();
+        if (oddsKey) {
+          try { localStorage.setItem('odds_api_key', oddsKey); } catch (_) {}
+        }
       } catch (_) {}
 
       // 2) localStorage override (if not already set)
