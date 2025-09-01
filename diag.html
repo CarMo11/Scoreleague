@@ -48,11 +48,11 @@
       <div>Persisted localStorage api_base</div><code id="lsApiBase"></code>
       <div>Set api_base</div>
       <div>
-        <input id="apiInput" type="text" placeholder="http://127.0.0.1:31234" style="width:100%; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;"/>
+        <input id="apiInput" type="text" placeholder="http://localhost:3001" style="width:100%; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;"/>
         <div class="btns" style="margin-top:8px;">
           <button id="btn-set-api">Set & Reload</button>
           <button id="btn-clear-api">Clear Override</button>
-          <button id="btn-quick-12731">Quick: 127.0.0.1:31234</button>
+          <button id="btn-quick-local3001">Quick: localhost:3001</button>
         </div>
       </div>
     </div>
@@ -61,6 +61,7 @@
     <pre id="envJs">(loading...)</pre>
 
     <h2>Proxy Health</h2>
+    <div class="btns"><button id="btn-ping-api">Ping API</button></div>
     <div class="grid">
       <div>GET API_BASE/api/health</div><pre id="health">(loading...)</pre>
       <div>GET API_BASE/api/odds/sports</div><pre id="sports">(loading...)</pre>
@@ -168,13 +169,41 @@
         alert('Failed to clear api_base: ' + e);
       }
     });
-    document.getElementById('btn-quick-12731').addEventListener('click', () => {
+    document.getElementById('btn-quick-local3001').addEventListener('click', () => {
       try {
-        localStorage.setItem('api_base', 'http://127.0.0.1:31234');
-        alert('api_base set to http://127.0.0.1:31234. Reloading...');
+        localStorage.setItem('api_base', 'http://localhost:3001');
+        alert('api_base set to http://localhost:3001. Reloading...');
         location.href = '/diag.html';
       } catch (e) {
         alert('Failed to set api_base: ' + e);
+      }
+    });
+
+    // Manual ping of API endpoints
+    document.getElementById('btn-ping-api').addEventListener('click', async () => {
+      const base = window.API_BASE;
+      if (!base) {
+        setEl('health', 'window.API_BASE is empty');
+        setEl('sports', 'window.API_BASE is empty');
+        return;
+      }
+      try {
+        const health = await fetch(base + '/api/health', { cache: 'no-store' }).then(r => r.json());
+        setEl('health', health);
+      } catch (e) {
+        const msg = ((e && e.name === 'AbortError') || /aborted/i.test(String((e && e.message) || e)))
+          ? 'ABORTED (neutral)'
+          : 'ERROR: ' + ((e && e.message) || e);
+        setEl('health', msg);
+      }
+      try {
+        const sports = await fetch(base + '/api/odds/sports', { cache: 'no-store' }).then(r => r.json());
+        setEl('sports', Array.isArray(sports) ? sports.slice(0, 10) : sports);
+      } catch (e) {
+        const msg = ((e && e.name === 'AbortError') || /aborted/i.test(String((e && e.message) || e)))
+          ? 'ABORTED (neutral)'
+          : 'ERROR: ' + ((e && e.message) || e);
+        setEl('sports', msg);
       }
     });
 
@@ -188,7 +217,10 @@
         const lsApi = localStorage.getItem('api_base');
         setEl('lsApiBase', lsApi || '(none)');
         const input = document.getElementById('apiInput');
-        if (input) input.value = lsApi || (window.API_BASE || '');
+        if (input) {
+          input.value = lsApi || (window.API_BASE || '');
+          input.placeholder = window.API_BASE || 'http://localhost:3001';
+        }
       } catch (e) { /* ignore */ }
 
       // Fetch env.js fresh
