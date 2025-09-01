@@ -43,6 +43,20 @@
       <div>API_BASE (window.API_BASE)</div><code id="apiBase"></code>
     </div>
 
+    <h2>API Base Override</h2>
+    <div class="grid">
+      <div>Persisted localStorage api_base</div><code id="lsApiBase"></code>
+      <div>Set api_base</div>
+      <div>
+        <input id="apiInput" type="text" placeholder="http://127.0.0.1:31234" style="width:100%; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;"/>
+        <div class="btns" style="margin-top:8px;">
+          <button id="btn-set-api">Set & Reload</button>
+          <button id="btn-clear-api">Clear Override</button>
+          <button id="btn-quick-12731">Quick: 127.0.0.1:31234</button>
+        </div>
+      </div>
+    </div>
+
     <h2>env.js (fresh fetch, no-store)</h2>
     <pre id="envJs">(loading...)</pre>
 
@@ -133,12 +147,49 @@
       }
     });
 
+    // API base override controls
+    document.getElementById('btn-set-api').addEventListener('click', () => {
+      try {
+        const v = String(document.getElementById('apiInput').value || '').trim();
+        if (!v) return alert('Enter a value');
+        localStorage.setItem('api_base', v);
+        alert('api_base saved. Reloading...');
+        location.href = '/diag.html';
+      } catch (e) {
+        alert('Failed to set api_base: ' + e);
+      }
+    });
+    document.getElementById('btn-clear-api').addEventListener('click', () => {
+      try {
+        localStorage.removeItem('api_base');
+        alert('api_base cleared. Reloading...');
+        location.href = '/diag.html';
+      } catch (e) {
+        alert('Failed to clear api_base: ' + e);
+      }
+    });
+    document.getElementById('btn-quick-12731').addEventListener('click', () => {
+      try {
+        localStorage.setItem('api_base', 'http://127.0.0.1:31234');
+        alert('api_base set to http://127.0.0.1:31234. Reloading...');
+        location.href = '/diag.html';
+      } catch (e) {
+        alert('Failed to set api_base: ' + e);
+      }
+    });
+
     (async function main() {
       setEl('loc', location.href);
       setEl('ua', navigator.userAgent);
       setEl('online', String(navigator.onLine));
       setEl('swc', navigator.serviceWorker && navigator.serviceWorker.controller ? 'YES' : 'NO');
       setEl('apiBase', typeof window !== 'undefined' ? String(window.API_BASE || '(empty)') : '(no window)');
+      try {
+        const lsApi = localStorage.getItem('api_base');
+        setEl('lsApiBase', lsApi || '(none)');
+        const input = document.getElementById('apiInput');
+        if (input) input.value = lsApi || (window.API_BASE || '');
+      } catch (e) { /* ignore */ }
 
       // Fetch env.js fresh
       try {
