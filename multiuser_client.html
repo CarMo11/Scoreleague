@@ -9875,6 +9875,21 @@
                 // Parse stored user JSON to object
                 try {
                     currentUser = JSON.parse(storedUser);
+                    // Auto re-authenticate to hydrate missing user id if username is present
+                    try {
+                        if (currentUser && !currentUser.id && currentUser.username && typeof API_BASE !== 'undefined') {
+                            const res = await fetch(`${API_BASE}/api/auth/login`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ username: currentUser.username })
+                            });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok && data && (data.user || data.id)) {
+                                currentUser = data.user || data;
+                                try { localStorage.setItem('scoreLeagueUser', JSON.stringify(currentUser)); } catch (_) {}
+                            }
+                        }
+                    } catch (_) { /* ignore best-effort */ }
                 } catch (e) {
                     console.warn('Failed to parse stored user, clearing session');
                     localStorage.removeItem('scoreLeagueUser');

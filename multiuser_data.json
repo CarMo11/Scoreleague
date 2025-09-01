@@ -59,6 +59,18 @@
         "biggestWin": 0,
         "totalCombinedOdds": 0
       }
+    },
+    "user_17567351968ae0c7": {
+      "id": "user_17567351968ae0c7",
+      "username": "12",
+      "coins": 950,
+      "joinedAt": "2025-09-01T15:59:56.509655",
+      "stats": {
+        "totalBets": 2,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
     }
   },
   "leagues": {},
@@ -802,8 +814,36 @@
         "status": "pending",
         "leagueIds": []
       }
+    ],
+    "user_17567351968ae0c7": [
+      {
+        "id": "bet_1756735223b0d963",
+        "userId": "user_17567351968ae0c7",
+        "matchId": "1663c46b51c84475c68c706d89f5c491",
+        "market": "total_goals",
+        "selection": "under",
+        "odds": 2.04,
+        "stake": 25,
+        "potentialWin": 51,
+        "placedAt": "2025-09-01T16:00:23.874937",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_17567352232e7120",
+        "userId": "user_17567351968ae0c7",
+        "matchId": "b6d5544b51f23099b39fda2733af0f68",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.35,
+        "stake": 25,
+        "potentialWin": 84,
+        "placedAt": "2025-09-01T16:00:23.882245",
+        "status": "pending",
+        "leagueIds": []
+      }
     ]
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-09-01T15:19:25.389209"
+  "lastUpdated": "2025-09-01T16:00:23.882277"
 }
