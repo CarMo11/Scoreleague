@@ -47,6 +47,18 @@
         "biggestWin": 113,
         "totalCombinedOdds": 0
       }
+    },
+    "user_175672557976c94d": {
+      "id": "user_175672557976c94d",
+      "username": "openbets-dev",
+      "coins": 975,
+      "joinedAt": "2025-09-01T13:19:39.678429",
+      "stats": {
+        "totalBets": 2,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
     }
   },
   "leagues": {},
@@ -723,8 +735,36 @@
         "status": "pending",
         "leagueIds": []
       }
+    ],
+    "user_175672557976c94d": [
+      {
+        "id": "bet_1756725579b6c76b",
+        "userId": "user_175672557976c94d",
+        "matchId": "match_1",
+        "market": "match_result",
+        "selection": "1",
+        "odds": 2.1,
+        "stake": 10,
+        "potentialWin": 21,
+        "placedAt": "2025-09-01T13:19:39.754900",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_17567255804b2956",
+        "userId": "user_175672557976c94d",
+        "matchId": "match_3",
+        "market": "btts",
+        "selection": "yes",
+        "odds": 1.55,
+        "stake": 15,
+        "potentialWin": 23,
+        "placedAt": "2025-09-01T13:19:40.281821",
+        "status": "pending",
+        "leagueIds": []
+      }
     ]
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-08-28T17:56:59.021974"
+  "lastUpdated": "2025-09-01T13:19:40.281833"
 }
