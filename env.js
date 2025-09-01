@@ -33,7 +33,7 @@
       // 3) Default based on host if still unset
       if (!window.API_BASE || !String(window.API_BASE).trim()) {
         const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-        window.API_BASE = isLocal ? 'http://localhost:3002' : 'https://scoreleague-api.onrender.com';
+        window.API_BASE = isLocal ? 'http://localhost:3001' : 'https://scoreleague-api.onrender.com';
       }
       try { console.log('env.js: API_BASE =', window.API_BASE); } catch(_) {}
     }

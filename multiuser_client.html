@@ -9331,15 +9331,7 @@
                     if (savedApi) { window.API_BASE = savedApi; }
                 } catch (_) { /* ignore */ }
             }
-            // Self-heal for local dev: if an older saved value points to :3001, upgrade to :3002
-            try {
-                const hostIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-                if (hostIsLocal && typeof window.API_BASE === 'string' && window.API_BASE.includes('localhost:3001')) {
-                    window.API_BASE = 'http://localhost:3002';
-                    try { localStorage.setItem('api_base', window.API_BASE); } catch (_) {}
-                    try { console.warn('[api_base] switched to', window.API_BASE, 'to avoid 3001 501/CORS'); } catch(_) {}
-                }
-            } catch (_) { /* ignore */ }
+            // Using API_BASE as configured; no port self-heal
         } catch (e) {
             console.warn('API base param parse failed', e);
         }
