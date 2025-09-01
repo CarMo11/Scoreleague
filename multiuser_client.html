@@ -9875,6 +9875,7 @@
                 // Parse stored user JSON to object
                 try {
                     currentUser = JSON.parse(storedUser);
+                    window.currentUser = currentUser;
                     // Auto re-authenticate to hydrate missing user id if username is present
                     try {
                         if (currentUser && !currentUser.id && currentUser.username && typeof API_BASE !== 'undefined') {
@@ -9886,6 +9887,7 @@
                             const data = await res.json().catch(() => ({}));
                             if (res.ok && data && (data.user || data.id)) {
                                 currentUser = data.user || data;
+                                window.currentUser = currentUser;
                                 try { localStorage.setItem('scoreLeagueUser', JSON.stringify(currentUser)); } catch (_) {}
                             }
                         }
@@ -9911,6 +9913,9 @@
                 showTab('matches');
                 updateUserUI();
                 try { loadMatches(); } catch (e) { console.warn('loadMatches failed', e); }
+                // After session restore, refresh Open Bets badge and list (if Open view is active)
+                try { if (typeof window.refreshOpenBetsCountBadge === 'function') await window.refreshOpenBetsCountBadge(); } catch (_) {}
+                try { if (window.betslipViewMode === 'open' && typeof window.loadOpenBetsInline === 'function') await window.loadOpenBetsInline(true); } catch (_) {}
                 // Ensure private league and sync membership coins when online
                 try {
                     if (isOnlineMode && supabaseClient && typeof ensurePrivateLeague === 'function') {
