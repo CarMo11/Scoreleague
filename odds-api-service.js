@@ -44,6 +44,19 @@ class OddsAPIService {
     } catch (_) { /* ignore */ }
   }
 
+  // Determine preferred bookmaker regions at runtime (localStorage/window override)
+  getPreferredRegions() {
+    try {
+      // Allow overriding via localStorage or a global for quick testing
+      const ls = (typeof localStorage !== 'undefined') ? (localStorage.getItem('odds_regions') || '').trim() : '';
+      const win = (typeof window !== 'undefined' && window.ODDS_REGIONS) ? String(window.ODDS_REGIONS).trim() : '';
+      const val = ls || win;
+      if (val) return val;
+    } catch (_) { /* ignore */ }
+    // Broaden coverage by default so EU leagues (e.g., 2. Bundesliga) are included
+    return 'uk,eu';
+  }
+
   // Allow runtime update of the API key and persist to localStorage
   setApiKey(newKey = '') {
     this.apiKey = (newKey || '').trim();
@@ -375,9 +388,10 @@ class OddsAPIService {
       'soccer_epl'
     ];
     const allMatches = [];
+    const regions = this.getPreferredRegions();
     for (const league of leagues) {
       console.log(`Fetching matches for ${league}…`);
-      const odds = await this.getOdds(league);
+      const odds = await this.getOdds(league, regions);
       if (odds?.length) {
         const converted = this.convertToAppFormat(odds);
         console.log(`Found ${converted.length} matches for ${this.getLeagueName(league)}`);
