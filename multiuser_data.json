@@ -15,10 +15,10 @@
     "user_17543257641297a1": {
       "id": "user_17543257641297a1",
       "username": "Mo",
-      "coins": 160,
+      "coins": 115,
       "joinedAt": "2025-08-04T18:42:44.702471",
       "stats": {
-        "totalBets": 26,
+        "totalBets": 29,
         "totalWinnings": 0,
         "biggestWin": 0,
         "totalCombinedOdds": 0
@@ -734,6 +734,45 @@
         "placedAt": "2025-08-18T10:27:35.788Z",
         "status": "pending",
         "leagueIds": []
+      },
+      {
+        "id": "bet_17567327464114c0",
+        "userId": "user_17543257641297a1",
+        "matchId": "456d29d67932f16eab285a241a501d77",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 3.72,
+        "stake": 25,
+        "potentialWin": 93,
+        "placedAt": "2025-09-01T15:19:06.195612",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_175673276573235c",
+        "userId": "user_17543257641297a1",
+        "matchId": "8581b813e3712ddfa224302df848b4db",
+        "market": "match_result",
+        "selection": "draw",
+        "odds": 4.12,
+        "stake": 10,
+        "potentialWin": 41,
+        "placedAt": "2025-09-01T15:19:25.378694",
+        "status": "pending",
+        "leagueIds": []
+      },
+      {
+        "id": "bet_1756732765e2b8c6",
+        "userId": "user_17543257641297a1",
+        "matchId": "57d2df69620f56e3b004350a6e3af920",
+        "market": "double_chance",
+        "selection": "1x",
+        "odds": 1.28,
+        "stake": 10,
+        "potentialWin": 13,
+        "placedAt": "2025-09-01T15:19:25.389186",
+        "status": "pending",
+        "leagueIds": []
       }
     ],
     "user_175672557976c94d": [
@@ -766,5 +805,5 @@
     ]
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-09-01T13:19:40.281833"
+  "lastUpdated": "2025-09-01T15:19:25.389209"
 }
