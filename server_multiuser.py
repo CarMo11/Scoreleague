@@ -878,6 +878,25 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         allowed = [o.strip() for o in allowed if o.strip()]
         if origin and origin in allowed:
             return origin
+        # Allow same-host origins (ignoring port) for LAN/mobile testing
+        try:
+            if origin:
+                o = urlparse(origin)
+                origin_host = (o.hostname or '').strip().lower()
+                req_host_header = (self.headers.get('Host', '') or '').strip().lower()
+                req_hostname = req_host_header
+                # Extract hostname from Host header (handle IPv6 [::1]:3001 and IPv4 host:port)
+                if req_hostname.startswith('['):
+                    end = req_hostname.find(']')
+                    if end != -1:
+                        req_hostname = req_hostname[1:end]
+                if ':' in req_hostname:
+                    req_hostname = req_hostname.split(':', 1)[0]
+                loopbacks = {'localhost', '127.0.0.1', '::1'}
+                if origin_host == req_hostname or (origin_host in loopbacks and req_hostname in loopbacks):
+                    return origin
+        except Exception:
+            pass
         return allowed[0] if allowed else '*'
 
     def send_json_response(self, data, status_code=200):
