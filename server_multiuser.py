@@ -250,6 +250,125 @@ def compute_market_results(home_goals: int, away_goals: int):
         results['double_chance'].add('x2')
     return results
 
+# --- Odds/demo helpers -------------------------------------------------------
+def convert_local_matches_to_app_format(local_matches):
+    """Convert stored demo/local matches (which may use legacy market keys)
+    into the app's expected format used by the frontend odds renderer.
+
+    Expected output per match:
+      {
+        'id': str,
+        'homeTeam': str,
+        'awayTeam': str,
+        'league': str,
+        'date': str,  # optional
+        'time': str,  # optional
+        'status': 'upcoming'|'live'|'finished',
+        'markets': {
+          'match_result': { 'home': float, 'draw': float, 'away': float },
+          'total_goals': { 'over': float, 'under': float },
+          'both_teams_score': { 'yes': float, 'no': float }
+        }
+      }
+    """
+    out = []
+    try:
+        for m in (local_matches or []):
+            if not isinstance(m, dict):
+                continue
+            markets = m.get('markets') or {}
+            # Normalize legacy keys -> new keys
+            # 1X2 -> match_result
+            match_result = None
+            if isinstance(markets.get('match_result'), dict):
+                mr = markets.get('match_result') or {}
+                try:
+                    # already in new form
+                    match_result = {
+                        'home': float(mr.get('home')) if mr.get('home') is not None else None,
+                        'draw': float(mr.get('draw')) if mr.get('draw') is not None else None,
+                        'away': float(mr.get('away')) if mr.get('away') is not None else None,
+                    }
+                except Exception:
+                    match_result = None
+            if match_result is None and isinstance(markets.get('1x2'), dict):
+                try:
+                    mm = markets.get('1x2')
+                    h = mm.get('1', {}).get('odds')
+                    d = mm.get('X', {}).get('odds')
+                    a = mm.get('2', {}).get('odds')
+                    match_result = {'home': float(h), 'draw': float(d), 'away': float(a)}
+                except Exception:
+                    match_result = None
+
+            # over_under -> total_goals
+            total_goals = None
+            if isinstance(markets.get('total_goals'), dict):
+                tg = markets.get('total_goals') or {}
+                try:
+                    total_goals = {
+                        'over': float(tg.get('over')) if tg.get('over') is not None else None,
+                        'under': float(tg.get('under')) if tg.get('under') is not None else None,
+                    }
+                except Exception:
+                    total_goals = None
+            if total_goals is None and isinstance(markets.get('over_under'), dict):
+                try:
+                    ou = markets.get('over_under')
+                    over = ou.get('over', {}).get('odds')
+                    under = ou.get('under', {}).get('odds')
+                    total_goals = {'over': float(over), 'under': float(under)}
+                except Exception:
+                    total_goals = None
+
+            # both_teams -> both_teams_score
+            btts = None
+            if isinstance(markets.get('both_teams_score'), dict):
+                bs = markets.get('both_teams_score') or {}
+                try:
+                    btts = {
+                        'yes': float(bs.get('yes')) if bs.get('yes') is not None else None,
+                        'no': float(bs.get('no')) if bs.get('no') is not None else None,
+                    }
+                except Exception:
+                    btts = None
+            if btts is None and isinstance(markets.get('both_teams'), dict):
+                try:
+                    bt = markets.get('both_teams')
+                    yes = bt.get('yes', {}).get('odds')
+                    no = bt.get('no', {}).get('odds')
+                    btts = {'yes': float(yes), 'no': float(no)}
+                except Exception:
+                    btts = None
+
+            # Compose normalized markets, skipping any that failed to parse
+            norm_markets = {}
+            if isinstance(match_result, dict) and all(k in match_result and isinstance(match_result[k], (int, float)) for k in ('home','draw','away')):
+                norm_markets['match_result'] = match_result
+            if isinstance(total_goals, dict) and all(k in total_goals and isinstance(total_goals[k], (int, float)) for k in ('over','under')):
+                norm_markets['total_goals'] = total_goals
+            if isinstance(btts, dict) and all(k in btts and isinstance(btts[k], (int, float)) for k in ('yes','no')):
+                norm_markets['both_teams_score'] = btts
+
+            # Build normalized match object
+            out.append({
+                'id': m.get('id') or f"demo_{int(time.time())}",
+                'homeTeam': m.get('homeTeam') or m.get('home') or 'Home',
+                'awayTeam': m.get('awayTeam') or m.get('away') or 'Away',
+                'league': m.get('league') or 'Football League',
+                'date': m.get('date') or '',
+                'time': m.get('time') or '',
+                'status': m.get('status') or 'upcoming',
+                'markets': norm_markets or {
+                    'match_result': { 'home': 2.0, 'draw': 3.2, 'away': 2.8 },
+                    'total_goals': { 'over': 1.85, 'under': 1.95 },
+                    'both_teams_score': { 'yes': 1.72, 'no': 2.05 }
+                }
+            })
+    except Exception:
+        pass
+    return out
+
 class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         """Handle GET requests"""
