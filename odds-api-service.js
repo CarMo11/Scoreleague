@@ -300,20 +300,49 @@ class OddsAPIService {
   // Convert API data to our app format
   convertToAppFormat(apiData) {
     if (!apiData || !Array.isArray(apiData)) return [];
-    // If data already appears to be in app format, return it unchanged
+    // If data already appears to be in app format with NEW keys, return unchanged.
+    // If it contains legacy market keys, normalize them.
     try {
       const first = apiData[0] || {};
-      const isAppFormat = (
-        ('homeTeam' in first && 'awayTeam' in first) ||
-        (first.markets && (
-          'match_result' in first.markets ||
-          'total_goals' in first.markets ||
-          'both_teams_score' in first.markets ||
-          '1x2' in first.markets ||
-          'over_under' in first.markets
-        ))
-      );
-      if (isAppFormat) return apiData;
+      const mk = (first && first.markets) ? first.markets : null;
+      const hasNew = !!(mk && ('match_result' in mk || 'total_goals' in mk || 'both_teams_score' in mk));
+      const hasOld = !!(mk && ('1x2' in mk || 'over_under' in mk || 'both_teams' in mk));
+      if (hasNew) return apiData;
+      const looksApp = (('homeTeam' in first && 'awayTeam' in first) || !!mk);
+      if (looksApp && hasOld) {
+        return apiData.map((m, index) => {
+          try {
+            const markets = m.markets || {};
+            const mr = markets['match_result'] || markets['1x2'] || {};
+            const tg = markets['total_goals'] || markets['over_under'] || {};
+            const bt = markets['both_teams_score'] || markets['both_teams'] || {};
+            return {
+              id: m.id || `app_${index}`,
+              homeTeam: m.homeTeam || m.home || 'Home',
+              awayTeam: m.awayTeam || m.away || 'Away',
+              league: m.league || 'Football League',
+              date: m.date || '',
+              time: m.time || '',
+              status: m.status || 'upcoming',
+              markets: {
+                match_result: {
+                  home: Number(mr.home ?? mr['1']?.odds ?? 2.0),
+                  draw: Number(mr.draw ?? mr['X']?.odds ?? 3.2),
+                  away: Number(mr.away ?? mr['2']?.odds ?? 2.8)
+                },
+                total_goals: {
+                  over: Number(tg.over ?? tg.over?.odds ?? 1.85),
+                  under: Number(tg.under ?? tg.under?.odds ?? 1.95)
+                },
+                both_teams_score: {
+                  yes: Number(bt.yes ?? bt.yes?.odds ?? 1.72),
+                  no: Number(bt.no ?? bt.no?.odds ?? 2.05)
+                }
+              }
+            };
+          } catch (_) { return m; }
+        });
+      }
     } catch (_) { /* fall through to conversion */ }
     return apiData.map((match, index) => {
       const h2hMarket = match.bookmakers?.[0]?.markets?.find(m => m.key === 'h2h');
