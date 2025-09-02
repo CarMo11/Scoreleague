@@ -59,6 +59,18 @@
         "biggestWin": 0,
         "totalCombinedOdds": 0
       }
+    },
+    "user_1756831367ff1494": {
+      "id": "user_1756831367ff1494",
+      "username": "Kkkk",
+      "coins": 1000,
+      "joinedAt": "2025-09-02T18:42:47.655805",
+      "stats": {
+        "totalBets": 0,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
     }
   },
   "leagues": {},
@@ -818,5 +830,5 @@
     ]
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-09-01T17:06:57.711155"
+  "lastUpdated": "2025-09-02T18:42:47.655837"
 }
