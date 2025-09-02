@@ -37,8 +37,10 @@
         // RFC1918 private ranges + common mDNS/LAN hostnames
         const isPrivateIP = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hn);
         const isMdnsLan = /\.(local|lan)$/i.test(hn);
-        const isLocal = isLocalHost || isPrivateIP || isMdnsLan;
-        window.API_BASE = isLocal ? 'http://localhost:3001' : 'https://scoreleague-api.onrender.com';
+        const isLocalNetwork = isPrivateIP || isMdnsLan;
+        window.API_BASE = isLocalHost
+          ? 'http://localhost:3001'
+          : (isLocalNetwork ? `http://${hn}:3001` : 'https://scoreleague-api.onrender.com');
       }
       try { console.log('env.js: API_BASE =', window.API_BASE); } catch(_) {}
     }
