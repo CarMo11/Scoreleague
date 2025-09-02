@@ -369,6 +369,20 @@ def convert_local_matches_to_app_format(local_matches):
         pass
     return out
 
+def get_demo_sports_list():
+    """Provide a minimal sports list so clients can operate even when upstream is unavailable.
+    Includes the leagues we fetch by default on the client.
+    """
+    try:
+        return [
+            { 'key': 'soccer_germany_bundesliga2', 'group': 'Soccer', 'title': '2. Bundesliga' },
+            { 'key': 'soccer_england_efl_champ',   'group': 'Soccer', 'title': 'Championship' },
+            { 'key': 'soccer_germany_bundesliga',  'group': 'Soccer', 'title': 'Bundesliga' },
+            { 'key': 'soccer_epl',                 'group': 'Soccer', 'title': 'Premier League' },
+        ]
+    except Exception:
+        return []
+
 class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         """Handle GET requests"""
@@ -464,12 +478,13 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                             if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
                                 self.send_json_response(ODDS_SPORTS_CACHE['data'])
                                 return
-                            self.send_json_response([])
+                            # Provide minimal demo list so clients can still function
+                            self.send_json_response(get_demo_sports_list())
                             return
                     except Exception:
                         pass
                 # Graceful degrade if fallback fails
-                self.send_json_response([])
+                self.send_json_response(get_demo_sports_list())
                 return
             upstream = f"https://api.the-odds-api.com/v4/sports/?apiKey={odds_key}"
             try:
@@ -536,12 +551,15 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 if c and c.get('data'):
                                     self.send_json_response(c['data'])
                                     return
-                            self.send_json_response([])
+                            # Final fallback: serve normalized local demo matches
+                            demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
+                            self.send_json_response({ 'matches': demo })
                             return
                     except Exception:
                         pass
                 # Graceful degrade if fallback fails
-                self.send_json_response([])
+                demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
+                self.send_json_response({ 'matches': demo })
                 return
             params = parse_qs(query)
             sport = (params.get('sport') or params.get('sportKey') or [''])[0].strip()
