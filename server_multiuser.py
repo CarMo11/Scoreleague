@@ -503,9 +503,23 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                         else:
                             self.send_json_response(data)
             except urllib.error.HTTPError as e:
-                self.send_json_response({'error': 'Upstream error', 'status': e.code}, 502)
+                # Avoid 5xx to keep CORS friendly; prefer cache, else demo list
+                try:
+                    if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
+                        self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                    else:
+                        self.send_json_response(get_demo_sports_list())
+                except Exception:
+                    self.send_json_response(get_demo_sports_list())
             except Exception as e:
-                self.send_json_response({'error': f'Proxy error: {type(e).__name__}'}, 502)
+                # Avoid 5xx to keep CORS friendly; prefer cache, else demo list
+                try:
+                    if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
+                        self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                    else:
+                        self.send_json_response(get_demo_sports_list())
+                except Exception:
+                    self.send_json_response(get_demo_sports_list())
         
         elif path == '/api/odds':
             odds_key = os.environ.get('ODDS_API_KEY')
@@ -608,7 +622,18 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     self.send_json_response({'error': 'Upstream error', 'status': e.code, 'body': err_body[:2000]}, 502)
             except Exception as e:
-                self.send_json_response({'error': f'Proxy error: {type(e).__name__}'}, 502)
+                # Avoid 5xx; prefer cached, else normalized demo matches
+                try:
+                    cache_key_safe = f"{sport}|{regions}|{markets}|{odds_format}"
+                    c = ODDS_CACHE.get(cache_key_safe)
+                    if c and c.get('data'):
+                        self.send_json_response(c['data'])
+                    else:
+                        demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
+                        self.send_json_response({'matches': demo})
+                except Exception:
+                    demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
+                    self.send_json_response({'matches': demo})
 
         
         elif path.startswith('/api/leagues/user/'):
