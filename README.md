@@ -47,5 +47,6 @@ LOG_PROXY_DEBUG=1 python3 server_multiuser.py
 ## More details
 
 - See `TESTING_SETUP_GUIDE.md` > "Proxy Debug Headers & Diagnostics" for step-by-step instructions.
+- See `docs/DIAGNOSTICS.md` for an in-depth troubleshooting guide.
 - `server_multiuser.py` exposes debug headers via `send_json_response()` for CORS-safe access.
 - `diag.html` fetches and displays the headers in the UI.
