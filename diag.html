@@ -21,6 +21,8 @@
     button { padding:8px 12px; border-radius:6px; border:1px solid #2a3142; background:#1a2233; color:#e6e8eb; cursor:pointer; }
     button:hover { background:#223049; }
     a { color:#8ecbff; }
+    .danger { background:#5a1a1a; border-color:#6a2a2a; }
+    .danger:hover { background:#7a2a2a; }
   </style>
 </head>
 <body>
@@ -75,6 +77,45 @@
     <div class="grid">
       <div>Sports headers</div><pre id="sportsHeaders">(loading...)</pre>
       <div>Odds headers (sport=soccer_epl)</div><pre id="oddsHeaders">(loading...)</pre>
+    </div>
+
+    <h2>Local Test Utilities</h2>
+    <div class="grid">
+      <div>Admin Token (optional)</div>
+      <div>
+        <input id="adminToken" type="password" placeholder="X-Admin-Token header" style="width:100%; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;" />
+        <div style="margin-top:6px;"><label><input type="checkbox" id="rememberAdmin" /> Remember in this browser</label></div>
+      </div>
+      <div>Login/Create (nickname)</div>
+      <div>
+        <input id="nickname" type="text" placeholder="enter nickname" style="width:100%; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;" />
+        <div class="btns">
+          <button id="btn-login-nickname">Login</button>
+        </div>
+        <pre id="loginResult"></pre>
+      </div>
+      <div>User ID</div>
+      <div>
+        <input id="userId" type="text" placeholder="auto-filled after login" style="width:100%; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;" />
+      </div>
+      <div>Reset User</div>
+      <div>
+        <div class="btns" style="align-items:center; gap:12px;">
+          <label>Coins <input id="resetCoins" type="number" value="1000" style="width:120px; margin-left:6px; padding:6px; border-radius:6px; border:1px solid #2a3142; background:#0f1115; color:#e6e8eb;" /></label>
+          <label><input id="resetClearBets" type="checkbox" checked /> Clear bets</label>
+        </div>
+        <div class="btns">
+          <button id="btn-reset-user" class="danger">Reset User</button>
+        </div>
+        <pre id="resetUserResult"></pre>
+      </div>
+      <div>Reset All</div>
+      <div>
+        <div class="btns">
+          <button id="btn-reset-all" class="danger">RESET ALL (danger)</button>
+        </div>
+        <pre id="resetAllResult"></pre>
+      </div>
     </div>
 
     <h2>Service Worker Registrations</h2>
@@ -255,6 +296,101 @@
 
     document.getElementById('btn-check-headers').addEventListener('click', fetchProxyHeaders);
 
+    function getApiBaseStrict() {
+      const base = window.API_BASE;
+      if (!base) throw new Error('window.API_BASE is empty');
+      return base;
+    }
+    function getAdminToken() {
+      const el = document.getElementById('adminToken');
+      return el ? String(el.value || '').trim() : '';
+    }
+    function maybeAddAdminHeader(headers) {
+      try {
+        const tok = getAdminToken();
+        if (tok) headers['X-Admin-Token'] = tok;
+      } catch (e) { /* ignore */ }
+    }
+    function setPre(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try { el.textContent = typeof val === 'string' ? val : JSON.stringify(val, null, 2); }
+      catch (e) { el.textContent = String(val); }
+    }
+    // Remember admin token
+    (function wireAdminRemember() {
+      const chk = document.getElementById('rememberAdmin');
+      const inp = document.getElementById('adminToken');
+      if (!chk || !inp) return;
+      const syncSave = () => {
+        try {
+          if (chk.checked && inp.value) localStorage.setItem('diag_admin_token', inp.value);
+          else localStorage.removeItem('diag_admin_token');
+        } catch (e) { /* ignore */ }
+      };
+      chk.addEventListener('change', syncSave);
+      inp.addEventListener('input', () => { if (chk.checked) syncSave(); });
+    })();
+    // Login (nickname)
+    document.getElementById('btn-login-nickname').addEventListener('click', async () => {
+      try {
+        const base = getApiBaseStrict();
+        const username = String(document.getElementById('nickname').value || '').trim();
+        if (username.length < 2) return alert('Enter a nickname (min 2 chars)');
+        const r = await fetch(base + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await r.json();
+        setPre('loginResult', data);
+        if (data && data.user && data.user.id) {
+          document.getElementById('userId').value = data.user.id;
+          try {
+            localStorage.setItem('diag_user_id', data.user.id);
+            localStorage.setItem('diag_username', data.user.username || username);
+          } catch (e) { /* ignore */ }
+        }
+      } catch (e) {
+        setPre('loginResult', 'ERROR: ' + ((e && e.message) || e));
+      }
+    });
+    // Reset user
+    document.getElementById('btn-reset-user').addEventListener('click', async () => {
+      try {
+        const base = getApiBaseStrict();
+        const userId = String(document.getElementById('userId').value || '').trim();
+        if (!userId) return alert('Enter userId');
+        const coins = parseInt(document.getElementById('resetCoins').value || '1000', 10) || 1000;
+        const clearBets = !!document.getElementById('resetClearBets').checked;
+        const headers = { 'Content-Type': 'application/json' };
+        maybeAddAdminHeader(headers);
+        const r = await fetch(base + '/api/debug/reset-user', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ userId, coins, clearBets })
+        });
+        const data = await r.json();
+        setPre('resetUserResult', data);
+      } catch (e) {
+        setPre('resetUserResult', 'ERROR: ' + ((e && e.message) || e));
+      }
+    });
+    // Reset all
+    document.getElementById('btn-reset-all').addEventListener('click', async () => {
+      try {
+        if (!confirm('This will clear ALL users, leagues and bets on the server and re-seed demo matches. Continue?')) return;
+        const base = getApiBaseStrict();
+        const headers = { 'Content-Type': 'application/json' };
+        maybeAddAdminHeader(headers);
+        const r = await fetch(base + '/api/debug/reset-all', { method: 'POST', headers, body: JSON.stringify({}) });
+        const data = await r.json();
+        setPre('resetAllResult', data);
+      } catch (e) {
+        setPre('resetAllResult', 'ERROR: ' + ((e && e.message) || e));
+      }
+    });
+
     (async function main() {
       setEl('loc', location.href);
       setEl('ua', navigator.userAgent);
@@ -312,6 +448,27 @@
       if (window.API_BASE) {
         try { await fetchProxyHeaders(); } catch (e) { /* ignore */ }
       }
+
+      // Prefill saved admin token and userId
+      try {
+        const savedAdmin = localStorage.getItem('diag_admin_token');
+        if (savedAdmin) {
+          const adminEl = document.getElementById('adminToken');
+          const chk = document.getElementById('rememberAdmin');
+          if (adminEl) adminEl.value = savedAdmin;
+          if (chk) chk.checked = true;
+        }
+        const savedUser = localStorage.getItem('diag_user_id');
+        if (savedUser) {
+          const uel = document.getElementById('userId');
+          if (uel) uel.value = savedUser;
+        }
+        const savedNick = localStorage.getItem('diag_username');
+        if (savedNick) {
+          const nel = document.getElementById('nickname');
+          if (nel) nel.value = savedNick;
+        }
+      } catch (e) { /* ignore */ }
 
       // List SW registrations
       try {
