@@ -10002,6 +10002,35 @@
             if (!__gate.allowed) return;
             const __savedAdminInputs = mergeAdminSavedInputs(captureAdminInputs());
             const __activeAdminElId = captureActiveAdminElement();
+            const title = document.getElementById('matches-title');
+
+            // Lazily define league collapse helpers (global) for header onclicks
+            if (!window.toggleLeagueCollapse) {
+                window.toggleLeagueCollapse = function (sid) {
+                    try {
+                        const KEY = 'collapsed_leagues_v1';
+                        const raw = localStorage.getItem(KEY);
+                        const arr = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
+                        const i = arr.indexOf(sid);
+                        if (i === -1) arr.push(sid); else arr.splice(i, 1);
+                        localStorage.setItem(KEY, JSON.stringify(arr));
+                        const content = document.getElementById(`league-content-${sid}`);
+                        const caret = document.getElementById(`league-caret-${sid}`);
+                        const collapsed = arr.includes(sid);
+                        if (content) content.style.display = collapsed ? 'none' : 'block';
+                        if (caret) caret.textContent = collapsed ? '►' : '▼';
+                    } catch (_) { /* noop */ }
+                };
+            }
+            const isLeagueCollapsed = function (sid) {
+                try {
+                    const KEY = 'collapsed_leagues_v1';
+                    const raw = localStorage.getItem(KEY);
+                    const arr = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
+                    return arr.includes(sid);
+                } catch (_) { return false; }
+            };
+
             // Build a quick index for match metadata so other views (like Open Bets) can resolve team names
             try {
                 const idx = {};
@@ -10011,63 +10040,95 @@
                 window.matchIndex = idx;
             } catch (_) { /* non-fatal */ }
 
-            container.innerHTML = matches.map(match => `
-                <div class="match-card real-match" data-match-id="${match.id}" data-status="${match.status || ''}" data-home-team="${match.homeTeam}" data-away-team="${match.awayTeam}">
-                    <div class="match-header">
-                        <div class="match-time">${match.date}</div>
-                        <div class="league-badge">${match.league}</div>
+            // Group matches by league
+            const byLeague = {};
+            (Array.isArray(matches) ? matches : []).forEach(m => {
+                const lg = m && m.league ? String(m.league) : 'Other';
+                if (!byLeague[lg]) byLeague[lg] = [];
+                byLeague[lg].push(m);
+            });
+
+            // Update title with total count
+            try { if (title) title.textContent = `⚽ Local Matches (${(Array.isArray(matches) ? matches.length : 0)} available)`; } catch (_) {}
+
+            // Build HTML per league with collapsible sections
+            let html = '';
+            Object.keys(byLeague).sort((a, b) => a.localeCompare(b)).forEach(league => {
+                const list = byLeague[league];
+                const sid = safeId(league);
+                const collapsed = isLeagueCollapsed(sid);
+                html += `
+                    <div class="league-header" style="margin: 20px 0 10px; padding: 10px; background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 8px; cursor: pointer;" onclick="window.toggleLeagueCollapse && window.toggleLeagueCollapse('${sid}')">
+                        <h3 style="color: white; margin: 0; font-size: 16px; display:flex; align-items:center; gap:8px;">
+                            <span id="league-caret-${sid}">${collapsed ? '►' : '▼'}</span>
+                            🏆 ${league} (${list.length} matches)
+                        </h3>
                     </div>
-                    <div class="teams">
-                        <div class="team">
-                            <div class="team-name">${match.homeTeam}</div>
+                    <div id="league-content-${sid}" style="${collapsed ? 'display:none;' : 'display:block;'}">
+                `;
+
+                html += list.map(match => `
+                    <div class="match-card real-match" data-match-id="${match.id}" data-status="${match.status || ''}" data-home-team="${match.homeTeam}" data-away-team="${match.awayTeam}">
+                        <div class="match-header">
+                            <div class="match-time">${match.date || ''}</div>
+                            <div class="league-badge">${match.league || ''}</div>
                         </div>
-                        <div class="vs">VS</div>
-                        <div class="team">
-                            <div class="team-name">${match.awayTeam}</div>
-                        </div>
-                    </div>
-                    <div class="betting-markets">
-                        <div class="market">
-                            <div class="market-title">Match Result (1X2)</div>
-                            <div class="market-odds">
-                                <button class="odds-button" onclick="toggleBet('${match.id}-1', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} Win', ${match.odds.home}, this)">
-                                    1 (${match.odds.home})
-                                </button>
-                                <button class="odds-button" onclick="toggleBet('${match.id}-x', '${match.homeTeam} vs ${match.awayTeam}', 'Draw', ${match.odds.draw}, this)">
-                                    X (${match.odds.draw})
-                                </button>
-                                <button class="odds-button" onclick="toggleBet('${match.id}-2', '${match.homeTeam} vs ${match.awayTeam}', '${match.awayTeam} Win', ${match.odds.away}, this)">
-                                    2 (${match.odds.away})
-                                </button>
+                        <div class="teams">
+                            <div class="team">
+                                <div class="team-name">${match.homeTeam}</div>
+                            </div>
+                            <div class="vs">VS</div>
+                            <div class="team">
+                                <div class="team-name">${match.awayTeam}</div>
                             </div>
                         </div>
-                        <div class="market">
-                            <div class="market-title">Doppelte Chance</div>
-                            <div class="market-odds">
-                                <button class="odds-button" onclick="toggleBet('${match.id}-1x', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} oder Unentschieden', ${(1/((1/Number(match.odds.home)) + (1/Number(match.odds.draw)))).toFixed(2)}, this)">
-                                    1X (${(1/((1/Number(match.odds.home)) + (1/Number(match.odds.draw)))).toFixed(2)})
-                                </button>
-                                <button class="odds-button" onclick="toggleBet('${match.id}-12', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} oder ${match.awayTeam}', ${(1/((1/Number(match.odds.home)) + (1/Number(match.odds.away)))).toFixed(2)}, this)">
-                                    12 (${(1/((1/Number(match.odds.home)) + (1/Number(match.odds.away)))).toFixed(2)})
-                                </button>
-                                <button class="odds-button" onclick="toggleBet('${match.id}-x2', '${match.homeTeam} vs ${match.awayTeam}', 'Unentschieden oder ${match.awayTeam}', ${(1/((1/Number(match.odds.draw)) + (1/Number(match.odds.away)))).toFixed(2)}, this)">
-                                    X2 (${(1/((1/Number(match.odds.draw)) + (1/Number(match.odds.away)))).toFixed(2)})
-                                </button>
+                        <div class="betting-markets">
+                            <div class="market">
+                                <div class="market-title">Match Result (1X2)</div>
+                                <div class="market-odds">
+                                    <button class="odds-button" onclick="toggleBet('${match.id}-1', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} Win', ${Number(match.odds?.home || 0)}, this, event)">
+                                        1 (${Number(match.odds?.home || 0).toFixed(2)})
+                                    </button>
+                                    <button class="odds-button" onclick="toggleBet('${match.id}-x', '${match.homeTeam} vs ${match.awayTeam}', 'Draw', ${Number(match.odds?.draw || 0)}, this, event)">
+                                        X (${Number(match.odds?.draw || 0).toFixed(2)})
+                                    </button>
+                                    <button class="odds-button" onclick="toggleBet('${match.id}-2', '${match.homeTeam} vs ${match.awayTeam}', '${match.awayTeam} Win', ${Number(match.odds?.away || 0)}, this, event)">
+                                        2 (${Number(match.odds?.away || 0).toFixed(2)})
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="market">
+                                <div class="market-title">Doppelte Chance</div>
+                                <div class="market-odds">
+                                    <button class="odds-button" onclick="toggleBet('${match.id}-1x', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} oder Unentschieden', ${1/((1/Number(match.odds?.home || 1)) + (1/Number(match.odds?.draw || 1)))}, this, event)">
+                                        1X (${(1/((1/Number(match.odds?.home || 1)) + (1/Number(match.odds?.draw || 1)))).toFixed(2)})
+                                    </button>
+                                    <button class="odds-button" onclick="toggleBet('${match.id}-12', '${match.homeTeam} vs ${match.awayTeam}', '${match.homeTeam} oder ${match.awayTeam}', ${1/((1/Number(match.odds?.home || 1)) + (1/Number(match.odds?.away || 1)))}, this, event)">
+                                        12 (${(1/((1/Number(match.odds?.home || 1)) + (1/Number(match.odds?.away || 1)))).toFixed(2)})
+                                    </button>
+                                    <button class="odds-button" onclick="toggleBet('${match.id}-x2', '${match.homeTeam} vs ${match.awayTeam}', 'Unentschieden oder ${match.awayTeam}', ${1/((1/Number(match.odds?.draw || 1)) + (1/Number(match.odds?.away || 1)))}, this, event)">
+                                        X2 (${(1/((1/Number(match.odds?.draw || 1)) + (1/Number(match.odds?.away || 1)))).toFixed(2)})
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        ${window.IS_ADMIN ? `
+                        <div class="admin-settle" style="margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;">
+                            <div style="font-weight:600; font-size:12px; margin-bottom:6px;">Admin: Final Score & Settle</div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <input id="settle-home-${safeId(match.id)}" type="number" min="0" placeholder="${match.homeTeam} goals" style="width:60px; padding:4px;" />
+                                <span>:</span>
+                                <input id="settle-away-${safeId(match.id)}" type="number" min="0" placeholder="${match.awayTeam} goals" style="width:60px; padding:4px;" />
+                                <button id="settle-btn-${safeId(match.id)}" class="odds-button" style="padding:6px 10px;" onclick="adminSettleForCard('${match.id}')">Settle</button>
+                            </div>
+                        </div>` : ''}
                     </div>
-                    ${window.IS_ADMIN ? `
-                    <div class="admin-settle" style="margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;">
-                        <div style="font-weight:600; font-size:12px; margin-bottom:6px;">Admin: Final Score & Settle</div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <input id="settle-home-${safeId(match.id)}" type="number" min="0" placeholder="${match.homeTeam} goals" style="width:60px; padding:4px;" />
-                            <span>:</span>
-                            <input id="settle-away-${safeId(match.id)}" type="number" min="0" placeholder="${match.awayTeam} goals" style="width:60px; padding:4px;" />
-                            <button id="settle-btn-${safeId(match.id)}" class="odds-button" style="padding:6px 10px;" onclick="adminSettleForCard('${match.id}')">Settle</button>
-                        </div>
-                    </div>` : ''}
-                </div>
-            `).join('');
+                `).join('');
+
+                html += `</div>`; // end league-content
+            });
+
+            container.innerHTML = html;
             window._lastRender = { source: 'node', data: (Array.isArray(matches) ? matches.slice() : matches) };
             restoreAdminInputs(__savedAdminInputs);
             restoreActiveAdminElement(__activeAdminElId);
