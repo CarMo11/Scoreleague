@@ -298,6 +298,13 @@
       } else {
         setEl('health', 'window.API_BASE is empty');
         setEl('sports', 'window.API_BASE is empty');
+        setEl('sportsHeaders', 'window.API_BASE is empty');
+        setEl('oddsHeaders', 'window.API_BASE is empty');
+      }
+
+      // Auto-run header fetch if API_BASE is present
+      if (window.API_BASE) {
+        try { await fetchProxyHeaders(); } catch (e) { /* ignore */ }
       }
 
       // List SW registrations
