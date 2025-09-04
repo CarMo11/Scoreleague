@@ -390,6 +390,21 @@ netlify deploy --prod
  - `X-Proxy-Mode: <mode>`
  - Optionally `X-Cache-Key` and `X-Upstream-Status` depending on mode
  
+ ### Bypass proxy cache (optional)
+ To force a fresh fetch and skip the server-side cache, both odds endpoints accept a `bypass_cache` query parameter. The value is treated as truthy when one of `1`, `true`, `yes`, `on` is used. This flag is also forwarded to the fallback proxy, ensuring cache bypass behavior is consistent end-to-end.
+ 
+ ```bash
+ # Sports list (skip cache)
+ curl -s -D - -o /dev/null "$API_BASE/api/odds/sports?bypass_cache=1"
+ 
+ # Sample odds request (skip cache)
+ curl -s -D - -o /dev/null "$API_BASE/api/odds?sport=soccer_epl&bypass_cache=1"
+ ```
+ 
+ Notes:
+ - `/api/odds/sports` responses include a fixed header `X-Cache-Key: sports_list` for consistency across modes (cache, upstream, fallback-proxy, demo).
+ - The Diagnostics UI (`diag.html`) includes a "Bypass cache" checkbox in the "Proxy Debug Headers" section. When checked, it appends `bypass_cache=1` to the test requests so you can easily compare headers with and without cache.
+
 ---
 
 ## ✅ Final Pre-Launch Checklist
