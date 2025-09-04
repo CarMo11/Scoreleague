@@ -7,3 +7,6 @@ services:
     startCommand: "python3 server_multiuser.py"
     healthCheckPath: /api/health
     autoDeploy: true
+    envVars:
+      - key: LOG_PROXY_DEBUG
+        value: "1"
