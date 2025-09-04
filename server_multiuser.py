@@ -1061,7 +1061,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             pass
         return allowed[0] if allowed else '*'
 
-    def send_json_response(self, data, status_code=200):
+    def send_json_response(self, data, status_code=200, extra_headers=None):
         """Send JSON response"""
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
@@ -1070,6 +1070,12 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token')
+        if isinstance(extra_headers, dict):
+            for hk, hv in extra_headers.items():
+                try:
+                    self.send_header(str(hk), str(hv))
+                except Exception:
+                    pass
         self.end_headers()
         self.wfile.write(json.dumps(data).encode('utf-8'))
     
