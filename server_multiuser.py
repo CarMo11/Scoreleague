@@ -1076,6 +1076,92 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             game_server.save_data()
             self.send_json_response({'success': True, 'bet': bet_ref, 'user': user})
         
+        elif path == '/api/debug/reset-all':
+            # Admin protection (enabled only if ADMIN_TOKEN is set)
+            admin_token = os.environ.get('ADMIN_TOKEN')
+            if admin_token:
+                provided = self.headers.get('X-Admin-Token') or self.headers.get('x-admin-token') or ''
+                if provided != admin_token:
+                    self.send_json_response({'error': 'Forbidden: admin token required'}, 403)
+                    return
+            # Snapshot counts for response
+            try:
+                users_before = len(game_server.game_data.get('users') or {})
+                leagues_before = len(game_server.game_data.get('leagues') or {})
+                bets_before = sum(len(v) for v in (game_server.game_data.get('bets') or {}).values() if isinstance(v, list))
+            except Exception:
+                users_before = leagues_before = bets_before = 0
+            # Reset in-memory stores
+            game_server.game_data['users'] = {}
+            game_server.game_data['leagues'] = {}
+            game_server.game_data['bets'] = {}
+            game_server.game_data['matches'] = []
+            # Clear odds caches
+            try:
+                ODDS_SPORTS_CACHE['data'] = None
+                ODDS_SPORTS_CACHE['ts'] = 0
+                ODDS_CACHE.clear()
+            except Exception:
+                pass
+            # Re-seed demo matches and persist
+            try:
+                game_server.initialize_demo_matches()
+            except Exception:
+                pass
+            game_server.save_data()
+            self.send_json_response({
+                'success': True,
+                'cleared': {
+                    'users': users_before,
+                    'leagues': leagues_before,
+                    'bets': bets_before
+                },
+                'matches': len(game_server.game_data.get('matches') or [])
+            })
+        
+        elif path == '/api/debug/reset-user':
+            # Admin protection (enabled only if ADMIN_TOKEN is set)
+            admin_token = os.environ.get('ADMIN_TOKEN')
+            if admin_token:
+                provided = self.headers.get('X-Admin-Token') or self.headers.get('x-admin-token') or ''
+                if provided != admin_token:
+                    self.send_json_response({'error': 'Forbidden: admin token required'}, 403)
+                    return
+            user_id = data.get('userId')
+            if not user_id:
+                self.send_json_response({'error': 'userId is required'}, 400)
+                return
+            user = game_server.game_data['users'].get(user_id)
+            if not user:
+                self.send_json_response({'error': 'User not found'}, 404)
+                return
+            coins = data.get('coins')
+            try:
+                coins = int(coins) if coins is not None else 1000
+            except Exception:
+                coins = 1000
+            clear_bets = bool(data.get('clearBets', True))
+            # Reset user state
+            user['coins'] = max(0, int(coins))
+            stats = user.setdefault('stats', {})
+            stats['totalBets'] = 0
+            stats['totalWinnings'] = 0
+            stats['biggestWin'] = 0
+            stats['totalCombinedOdds'] = 0
+            removed_bets = 0
+            if clear_bets:
+                try:
+                    removed_bets = len(game_server.game_data['bets'].get(user_id, []) or [])
+                except Exception:
+                    removed_bets = 0
+                game_server.game_data['bets'][user_id] = []
+            game_server.save_data()
+            self.send_json_response({
+                'success': True,
+                'user': user,
+                'removedBets': removed_bets
+            })
+        
         else:
             self.send_json_response({'error': 'Endpoint not found'}, 404)
     
