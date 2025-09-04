@@ -448,7 +448,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
             # Serve sports from cache when fresh
             try:
                 if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data'] and (time.time() - ODDS_SPORTS_CACHE.get('ts', 0) < ODDS_CACHE_TTL):
-                    self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                    self.send_json_response(ODDS_SPORTS_CACHE['data'], extra_headers={'X-Proxy-Mode': 'cache'})
                     return
             except Exception:
                 pass
@@ -472,19 +472,19 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                             if isinstance(data, list) and data:
                                 ODDS_SPORTS_CACHE['data'] = data
                                 ODDS_SPORTS_CACHE['ts'] = time.time()
-                                self.send_json_response(data)
+                                self.send_json_response(data, extra_headers={'X-Proxy-Mode': 'fallback-proxy', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                                 return
                             # On empty result, prefer any cached data
                             if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
-                                self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                                self.send_json_response(ODDS_SPORTS_CACHE['data'], extra_headers={'X-Proxy-Mode': 'cache', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                                 return
                             # Provide minimal demo list so clients can still function
-                            self.send_json_response(get_demo_sports_list())
+                            self.send_json_response(get_demo_sports_list(), extra_headers={'X-Proxy-Mode': 'demo', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                             return
                     except Exception:
                         pass
                 # Graceful degrade if fallback fails
-                self.send_json_response(get_demo_sports_list())
+                self.send_json_response(get_demo_sports_list(), extra_headers={'X-Proxy-Mode': 'demo', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                 return
             upstream = f"https://api.the-odds-api.com/v4/sports/?apiKey={odds_key}"
             try:
@@ -495,31 +495,31 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                     if isinstance(data, list) and data:
                         ODDS_SPORTS_CACHE['data'] = data
                         ODDS_SPORTS_CACHE['ts'] = time.time()
-                        self.send_json_response(data)
+                        self.send_json_response(data, extra_headers={'X-Proxy-Mode': 'upstream', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                     else:
                         # Prefer cached data on empty
                         if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
-                            self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                            self.send_json_response(ODDS_SPORTS_CACHE['data'], extra_headers={'X-Proxy-Mode': 'cache', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                         else:
-                            self.send_json_response(data)
+                            self.send_json_response(data, extra_headers={'X-Proxy-Mode': 'upstream-empty', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
             except urllib.error.HTTPError as e:
                 # Avoid 5xx to keep CORS friendly; prefer cache, else demo list
                 try:
                     if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
-                        self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                        self.send_json_response(ODDS_SPORTS_CACHE['data'], extra_headers={'X-Proxy-Mode': 'cache', 'X-Upstream-Status': str(e.code), 'Access-Control-Expose-Headers': 'X-Proxy-Mode, X-Upstream-Status'})
                     else:
-                        self.send_json_response(get_demo_sports_list())
+                        self.send_json_response(get_demo_sports_list(), extra_headers={'X-Proxy-Mode': 'upstream-error', 'X-Upstream-Status': str(e.code), 'Access-Control-Expose-Headers': 'X-Proxy-Mode, X-Upstream-Status'})
                 except Exception:
-                    self.send_json_response(get_demo_sports_list())
+                    self.send_json_response(get_demo_sports_list(), extra_headers={'X-Proxy-Mode': 'upstream-error', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
             except Exception as e:
                 # Avoid 5xx to keep CORS friendly; prefer cache, else demo list
                 try:
                     if isinstance(ODDS_SPORTS_CACHE.get('data'), list) and ODDS_SPORTS_CACHE['data']:
-                        self.send_json_response(ODDS_SPORTS_CACHE['data'])
+                        self.send_json_response(ODDS_SPORTS_CACHE['data'], extra_headers={'X-Proxy-Mode': 'cache', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                     else:
-                        self.send_json_response(get_demo_sports_list())
+                        self.send_json_response(get_demo_sports_list(), extra_headers={'X-Proxy-Mode': 'error', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
                 except Exception:
-                    self.send_json_response(get_demo_sports_list())
+                    self.send_json_response(get_demo_sports_list(), extra_headers={'X-Proxy-Mode': 'error', 'Access-Control-Expose-Headers': 'X-Proxy-Mode'})
         
         elif path == '/api/odds':
             odds_key = os.environ.get('ODDS_API_KEY')
@@ -544,7 +544,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                             cache_key_fb = f"{sport_fb}|{regions_fb}|{markets_fb}|{odds_format_fb}"
                             c = ODDS_CACHE.get(cache_key_fb)
                             if c and isinstance(c.get('data'), list) and c['data'] and (time.time() - c.get('ts', 0) < ODDS_CACHE_TTL):
-                                self.send_json_response(c['data'])
+                                self.send_json_response(c['data'], extra_headers={'X-Proxy-Mode': 'cache', 'X-Cache-Key': cache_key_fb})
                                 return
                         except Exception:
                             cache_key_fb = None
@@ -557,23 +557,23 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                             if isinstance(data, list) and data:
                                 if cache_key_fb:
                                     ODDS_CACHE[cache_key_fb] = {'data': data, 'ts': time.time()}
-                                self.send_json_response(data)
+                                self.send_json_response(data, extra_headers={'X-Proxy-Mode': 'fallback-proxy', 'X-Cache-Key': (cache_key_fb or '')})
                                 return
                             # Prefer cached on empty
                             if cache_key_fb:
                                 c = ODDS_CACHE.get(cache_key_fb)
                                 if c and c.get('data'):
-                                    self.send_json_response(c['data'])
+                                    self.send_json_response(c['data'], extra_headers={'X-Proxy-Mode': 'cache', 'X-Cache-Key': cache_key_fb})
                                     return
                             # Final fallback: serve normalized local demo matches
                             demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
-                            self.send_json_response({ 'matches': demo })
+                            self.send_json_response({ 'matches': demo }, extra_headers={'X-Proxy-Mode': 'demo'})
                             return
                     except Exception:
                         pass
                 # Graceful degrade if fallback fails
                 demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
-                self.send_json_response({ 'matches': demo })
+                self.send_json_response({ 'matches': demo }, extra_headers={'X-Proxy-Mode': 'demo'})
                 return
             params = parse_qs(query)
             sport = (params.get('sport') or params.get('sportKey') or [''])[0].strip()
@@ -588,7 +588,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 cache_key = f"{sport}|{regions}|{markets}|{odds_format}"
                 c = ODDS_CACHE.get(cache_key)
                 if c and isinstance(c.get('data'), list) and c['data'] and (time.time() - c.get('ts', 0) < ODDS_CACHE_TTL):
-                    self.send_json_response(c['data'])
+                    self.send_json_response(c['data'], extra_headers={'X-Proxy-Mode': 'cache', 'X-Cache-Key': cache_key})
                     return
             except Exception:
                 pass
@@ -603,13 +603,13 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                     data = json.loads(body)
                     if isinstance(data, list) and data:
                         ODDS_CACHE[cache_key] = {'data': data, 'ts': time.time()}
-                        self.send_json_response(data)
+                        self.send_json_response(data, extra_headers={'X-Proxy-Mode': 'upstream', 'X-Cache-Key': cache_key})
                     else:
                         c = ODDS_CACHE.get(cache_key)
                         if c and c.get('data'):
-                            self.send_json_response(c['data'])
+                            self.send_json_response(c['data'], extra_headers={'X-Proxy-Mode': 'cache', 'X-Cache-Key': cache_key})
                         else:
-                            self.send_json_response(data)
+                            self.send_json_response(data, extra_headers={'X-Proxy-Mode': 'upstream-empty', 'X-Cache-Key': cache_key})
             except urllib.error.HTTPError as e:
                 try:
                     err_body = e.read().decode('utf-8')
@@ -618,7 +618,7 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Gracefully degrade on common rate/authorization issues
                 if e.code in (400, 401, 402, 403, 404, 429, 500, 502, 503, 504):
                     # Return empty odds list so frontend can continue without errors
-                    self.send_json_response([])
+                    self.send_json_response([], extra_headers={'X-Proxy-Mode': 'upstream-error', 'X-Upstream-Status': str(e.code)})
                 else:
                     self.send_json_response({'error': 'Upstream error', 'status': e.code, 'body': err_body[:2000]}, 502)
             except Exception as e:
@@ -627,13 +627,13 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
                     cache_key_safe = f"{sport}|{regions}|{markets}|{odds_format}"
                     c = ODDS_CACHE.get(cache_key_safe)
                     if c and c.get('data'):
-                        self.send_json_response(c['data'])
+                        self.send_json_response(c['data'], extra_headers={'X-Proxy-Mode': 'cache', 'X-Cache-Key': cache_key_safe})
                     else:
                         demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
-                        self.send_json_response({'matches': demo})
+                        self.send_json_response({'matches': demo}, extra_headers={'X-Proxy-Mode': 'demo'})
                 except Exception:
                     demo = convert_local_matches_to_app_format(game_server.game_data.get('matches'))
-                    self.send_json_response({'matches': demo})
+                    self.send_json_response({'matches': demo}, extra_headers={'X-Proxy-Mode': 'demo'})
 
         
         elif path.startswith('/api/leagues/user/'):
@@ -1070,6 +1070,8 @@ class MultiUserRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Vary', 'Origin')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token')
+        # Expose debug headers to the browser for diagnostics (diag.html)
+        self.send_header('Access-Control-Expose-Headers', 'X-Proxy-Mode, X-Cache-Key, X-Upstream-Status')
         if isinstance(extra_headers, dict):
             for hk, hv in extra_headers.items():
                 try:
