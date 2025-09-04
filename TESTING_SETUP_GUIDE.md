@@ -353,9 +353,48 @@ netlify deploy --prod
 
 ---
 
-## ✅ Final Pre-Launch Checklist
+## 🔍 Proxy Debug Headers & Diagnostics
+ 
+ Use this section to troubleshoot odds proxy behavior from the frontend and backend.
+ 
+ ### Enable lightweight proxy debug logging (backend)
+ - Local run (temporary):
+ ```bash
+ LOG_PROXY_DEBUG=1 python3 server_multiuser.py
+ ```
+ - Render (production via blueprint): the service sets `LOG_PROXY_DEBUG=1` in `render.yaml`. You can also set it in the Render dashboard under Environment.
+ 
+ ### Inspect headers in the browser
+ 1) Open `diag.html` on the frontend:
+ - Local: `http://localhost:8000/diag.html` (or your local dev URL)
+ - Production: `https://scoreleague.netlify.app/diag.html`
+ 
+ 2) Set API base if needed:
+ - Use the "API Base Override" section to set `http://localhost:3001` for local API, or your deployed API URL.
+ 
+ 3) Click "Fetch Headers" beneath "Proxy Debug Headers". You should see for each endpoint:
+ - `X-Proxy-Mode`: one of `cache`, `fallback-proxy`, `upstream`, `demo`, `upstream-empty`, `upstream-error`, `error`
+ - `X-Cache-Key`: present when cache/upstream/fallback-proxy uses a cache key
+ - `X-Upstream-Status`: present when an upstream HTTP error code is captured
+ 
+ ### Verify via curl (CLI)
+ ```bash
+ # Sports list (expect headers exposed)
+ curl -s -D - -o /dev/null "$API_BASE/api/odds/sports"
+ 
+ # Sample odds request (soccer EPL) — replace API_BASE as needed
+ curl -s -D - -o /dev/null "$API_BASE/api/odds?sport=soccer_epl"
+ ```
+ Look for these response headers:
+ - `Access-Control-Expose-Headers: X-Proxy-Mode, X-Cache-Key, X-Upstream-Status`
+ - `X-Proxy-Mode: <mode>`
+ - Optionally `X-Cache-Key` and `X-Upstream-Status` depending on mode
+ 
+---
 
-### Technical:
+## ✅ Final Pre-Launch Checklist
+  
+  ### Technical:
 - [ ] Supabase tables created
 - [ ] RLS policies applied
 - [ ] Auth working
