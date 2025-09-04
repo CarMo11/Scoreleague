@@ -68,7 +68,10 @@
     </div>
 
     <h2>Proxy Debug Headers</h2>
-    <div class="btns"><button id="btn-check-headers">Fetch Headers</button></div>
+    <div class="btns">
+      <label><input type="checkbox" id="chk-bypass" /> Bypass cache</label>
+      <button id="btn-check-headers">Fetch Headers</button>
+    </div>
     <div class="grid">
       <div>Sports headers</div><pre id="sportsHeaders">(loading...)</pre>
       <div>Odds headers (sport=soccer_epl)</div><pre id="oddsHeaders">(loading...)</pre>
@@ -221,8 +224,10 @@
         setEl('oddsHeaders', 'window.API_BASE is empty');
         return;
       }
+      const bypass = !!(document.getElementById('chk-bypass') && document.getElementById('chk-bypass').checked);
       try {
-        const r1 = await fetch(base + '/api/odds/sports', { cache: 'no-store' });
+        const sportsUrl = base + '/api/odds/sports' + (bypass ? '?bypass_cache=1' : '');
+        const r1 = await fetch(sportsUrl, { cache: 'no-store' });
         const info1 = {
           status: r1.status,
           'X-Proxy-Mode': r1.headers.get('X-Proxy-Mode') || '(none)',
@@ -234,7 +239,8 @@
         setEl('sportsHeaders', 'ERROR: ' + ((e && e.message) || e));
       }
       try {
-        const r2 = await fetch(base + '/api/odds?sport=soccer_epl', { cache: 'no-store' });
+        const oddsUrl = base + '/api/odds?sport=soccer_epl' + (bypass ? '&bypass_cache=1' : '');
+        const r2 = await fetch(oddsUrl, { cache: 'no-store' });
         const info2 = {
           status: r2.status,
           'X-Proxy-Mode': r2.headers.get('X-Proxy-Mode') || '(none)',
