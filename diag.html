@@ -67,6 +67,13 @@
       <div>GET API_BASE/api/odds/sports</div><pre id="sports">(loading...)</pre>
     </div>
 
+    <h2>Proxy Debug Headers</h2>
+    <div class="btns"><button id="btn-check-headers">Fetch Headers</button></div>
+    <div class="grid">
+      <div>Sports headers</div><pre id="sportsHeaders">(loading...)</pre>
+      <div>Odds headers (sport=soccer_epl)</div><pre id="oddsHeaders">(loading...)</pre>
+    </div>
+
     <h2>Service Worker Registrations</h2>
     <pre id="swRegs">(loading...)</pre>
   </div>
@@ -206,6 +213,41 @@
         setEl('sports', msg);
       }
     });
+
+    async function fetchProxyHeaders() {
+      const base = window.API_BASE;
+      if (!base) {
+        setEl('sportsHeaders', 'window.API_BASE is empty');
+        setEl('oddsHeaders', 'window.API_BASE is empty');
+        return;
+      }
+      try {
+        const r1 = await fetch(base + '/api/odds/sports', { cache: 'no-store' });
+        const info1 = {
+          status: r1.status,
+          'X-Proxy-Mode': r1.headers.get('X-Proxy-Mode') || '(none)',
+          'X-Cache-Key': r1.headers.get('X-Cache-Key') || '(none)',
+          'X-Upstream-Status': r1.headers.get('X-Upstream-Status') || '(none)'
+        };
+        setEl('sportsHeaders', info1);
+      } catch (e) {
+        setEl('sportsHeaders', 'ERROR: ' + ((e && e.message) || e));
+      }
+      try {
+        const r2 = await fetch(base + '/api/odds?sport=soccer_epl', { cache: 'no-store' });
+        const info2 = {
+          status: r2.status,
+          'X-Proxy-Mode': r2.headers.get('X-Proxy-Mode') || '(none)',
+          'X-Cache-Key': r2.headers.get('X-Cache-Key') || '(none)',
+          'X-Upstream-Status': r2.headers.get('X-Upstream-Status') || '(none)'
+        };
+        setEl('oddsHeaders', info2);
+      } catch (e) {
+        setEl('oddsHeaders', 'ERROR: ' + ((e && e.message) || e));
+      }
+    }
+
+    document.getElementById('btn-check-headers').addEventListener('click', fetchProxyHeaders);
 
     (async function main() {
       setEl('loc', location.href);
