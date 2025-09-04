@@ -71,6 +71,18 @@
         "biggestWin": 0,
         "totalCombinedOdds": 0
       }
+    },
+    "user_175699992276ae72": {
+      "id": "user_175699992276ae72",
+      "username": "MoMo",
+      "coins": 1000,
+      "joinedAt": "2025-09-04T17:32:02.828981",
+      "stats": {
+        "totalBets": 0,
+        "totalWinnings": 0,
+        "biggestWin": 0,
+        "totalCombinedOdds": 0
+      }
     }
   },
   "leagues": {},
@@ -827,8 +839,9 @@
         "status": "pending",
         "leagueIds": []
       }
-    ]
+    ],
+    "user_175699992276ae72": []
   },
   "version": "1.0.0",
-  "lastUpdated": "2025-09-02T18:42:47.655837"
+  "lastUpdated": "2025-09-04T17:32:18.148377"
 }
